@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Navbar, { data } from './components/molecules/Navbar';
 import Footer from './components/molecules/Footer';
-import './globals.css';
 import Home from './app/Home';
 import { useAppContext } from './AppContext';
 import Products from './app/Products';
