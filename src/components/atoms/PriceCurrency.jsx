@@ -1,7 +1,7 @@
 import React from 'react'
 
-export default function PriceCurrency({cn , price}) {
+export default function PriceCurrency({cn , price , currency}) {
   return (
-	<div className={cn} > {price} </div>
+	<div className={` flex items-center !text-nowrap ${cn} `} > {price} {currency} </div>
   )
 }

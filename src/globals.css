@@ -1,6 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url(https://fonts.googleapis.com/css?family=Share+Tech+Mono:regular);
+/* <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet"> */
 
 
 

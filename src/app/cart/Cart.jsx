@@ -1,16 +1,15 @@
-'use client';
-import Breadcrumb from'@/components/atoms/Breadcrumb';
-import Button from'@/components/atoms/Button';
-import Input from'@/components/atoms/Input';
-import ProductCarousel from'@/components/atoms/ProductCarousel';
-import Title from'@/components/atoms/Title';
-import FeatureList from'@/components/molecules/FeatureList';
-import { hookSignUp } from'@/hooks/hookSignUp';
+import Breadcrumb from'../../components/atoms/Breadcrumb';
+import Button from'../../components/atoms/Button';
+import Input from'../../components/atoms/Input';
+import ProductCarousel from'../../components/atoms/ProductCarousel';
+import Title from'../../components/atoms/Title';
+import FeatureList from'../../components/molecules/FeatureList';
+import { UseCart } from'../../hooks/UseCart';
 import { Minus, Plus, ShoppingBag, Star, X } from 'lucide-react';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-export default function page() {
-    const { register, errors, isloading, trigger, clearErrors, setError, getValues, setValue, submit, watch, reset } = hookSignUp();
+export default function Cart() {
+    const { register, errors, isloading, trigger, clearErrors, setError, getValues, setValue, submit, watch, reset } = UseCart();
 
     const breadcrumbRoutes = [{ label: 'الرئيسية', href: '/' }, { label: 'كل المنتجات', href: '/products' }, { label: 'تفاصيل المنتج' }];
 

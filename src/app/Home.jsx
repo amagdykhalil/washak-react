@@ -15,25 +15,6 @@ export default function Home() {
   const Categories = data?.data?.sections?.find(e => e.section === 'Categories' );
   const Content_With_Icon = data?.data?.sections?.find(e => e.section === 'Content_With_Icon' );
 
-  // this dublicated two times
-  const Slider_Section = data?.data?.sections?.find(e => e.section === 'Slider_Section' );
-  const Html_Content = data?.data?.sections?.find(e => e.section === 'Html_Content' );
-  
-    
-    const category = {
-        title1 : "أقسام ",
-        title2 : "المنتجات",
-        data : [
-            {img : "/cta/1.png" , name : "مستلزمات المطبخ"},
-            {img : "/cta/2.png" , name : "منتجات منزلية"},
-            {img : "/cta/3.png" , name : "وعاء طهي"},
-            {img : "/cta/4.png" , name : "ديكورات"},
-            {img : "/cta/5.png" , name : "أثاث"},
-            {img : "/cta/6.png" , name : "العناية الشخصية"},
-            
-        ]
-    }
-
  
     return (
         <div className='pt-[30px] max-sm:!pt-[10px] flex flex-col gap-[50px] '>
