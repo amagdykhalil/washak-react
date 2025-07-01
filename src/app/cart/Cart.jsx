@@ -103,7 +103,6 @@ export default function Cart() {
 
     return (
         <div className='bg-[#f8fafb]  '>
-            <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure quis, impedit odio fugit inventore dolores beatae dolor dolore dicta voluptates corporis nihil nam, neque natus! Voluptatem quia magnam aspernatur enim!</div>
             <Breadcrumb cn=' !mt-0  !pt-[30px] container' routes={breadcrumbRoutes} />
 
             <div className='  !mb-[30px] container max-md:grid-cols-1  grid grid-cols-2 gap-[20px] '>

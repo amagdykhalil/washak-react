@@ -1,98 +1,140 @@
 import { Mail, Phone } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-
-// const links = [
-//     { href: '/shipping-policy', name: 'سياسة الخصوصية' },
-//     { href: '/returns-and-exchanges', name: 'الاستبدال و الاسترجاع' },
-//     { href: '/terms-of-service', name: 'شروط الخدمة' },
-//     { href: '/shipping-and-delivery', name: 'الشحن و التوصيل' },
-// ];
+import { useMemo } from 'react';
 
 export default function Footer({ menu, loading, menuSetting, loadingSetting }) {
-    const path = useLocation().pathname;
-    const settings = JSON.parse(menuSetting?.footer?.[0]?.settings || '{}');
+  const path = useLocation().pathname;
 
-    const { footer_enable_switch, footer_logo_switch, text_under_logo_status, footer_text_under_logo, footer_phone_number, footer_email, footer_copyright, footer_copyrights_switch, footer_alignment, footer_social_icons } = settings;
+  // Safely parse settings with fallbacks
+  const settings = useMemo(() => {
+    try {
+      return JSON.parse(menuSetting?.footer?.[0]?.settings || '{}');
+    } catch (error) {
+      console.error('Error parsing footer settings:', error);
+      return {};
+    }
+  }, [menuSetting]);
 
-    if (footer_enable_switch != '1') return null;
+  // Destructure settings with defaults
+  const { footer_enable_switch = '1', footer_logo_switch = '1', text_under_logo_status = 'yes', footer_text_under_logo = '', footer_phone_number = '', footer_email = '', footer_copyright = '', footer_copyrights_switch = '1', footer_alignment = 'horizontal', footer_social_icons = [] } = settings;
 
-    const renderLinks = () => {
-        return ['left', 'center', 'right'].map(position => {
-            const section = menu?.footer?.[position];
-            if (!section || !Array.isArray(section.data)) return null;
+  if (footer_enable_switch !== '1') return null;
 
-            return (
-                <div key={position} className='flex flex-col gap-[10px] max-sm:w-[300px] max-sm:mx-auto max-sm:text-center text-start'>
-                    <h3 className='text-xl max-md:text-lg mb-1'>{section.name}</h3>
-                    <ul className='flex flex-col gap-[6px]'>
-                        {section.data.map(link => {
-                            const isActive = path == link.href || path == `/${link.href}`;
-                            return (
-                                <li key={`${position}-${link.href}`} className='transition-all duration-300 hover:opacity-80 hover:-translate-x-2'>
-                                    <Link to={link.href.startsWith('/') ? link.href : `/${link.href}`}>
-                                        <span className={`text-sm font-[400] transition-colors duration-200 ${isActive ? 'text-[var(--second)]' : 'text-white'}`}>{link.text}</span>
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
-            );
-        });
-    };
+  const renderLinks = () => {
+    return ['left', 'center', 'right'].map(position => {
+      const section = menu?.footer?.[position];
+      if (!section || !Array.isArray(section?.data)) return null;
 
-    const renderSkeleton = () =>
-        Array(3)
-            .fill(0)
-            .map((_, index) => (
-                <div key={index} className='flex flex-col gap-[10px]'>
-                    <li className='w-24 h-4 bg-gray-600 animate-pulse rounded' />
-                    <li className='w-20 h-4 bg-gray-600 animate-pulse rounded' />
-                </div>
-            ));
+      return (
+        <div key={position} className='flex flex-col gap-4'>
+          <h3 className='text-lg font-semibold text-white tracking-wide'>{section.name || `Links ${position}`}</h3>
+          <ul className='flex flex-col gap-3'>
+            {section.data.map((link, index) => {
+              const isActive = path === link.href || path === `/${link.href}`;
+              return (
+                <li key={`${position}-${index}`} className='group'>
+                  <Link to={link.href?.startsWith('/') ? link.href : `/${link.href || '#'}`} className='relative block transition-all duration-200'>
+                    <span className={`relative text-white/80 hover:text-white transition-colors duration-200 ${isActive ? 'font-medium text-white' : ''}`}>
+                      {link.text || `Link ${index + 1}`}
+                      <span className={`absolute -bottom-1 left-0 h-0.5 bg-[var(--second)] transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      );
+    });
+  };
 
-    return (
-        <footer className='bg-[var(--main)] pt-[50px] pb-[40px] text-white'>
-            <div className='container flex flex-col items-center gap-[20px]'>
-                <div className={`flex flex-wrap justify-center items-start gap-[100px] pt-[30px] ${footer_alignment == 'vertical' ? '!flex-col !items-center' : ''} `}>
-                    <div className='max-w-[250px] flex flex-col items-center  gap-[20px]  w-full  '>
-                        {footer_logo_switch != 0 && <img src='/logo-white.png' alt='Logo' width={150} height={50} />}
-                        {text_under_logo_status == 'yes' && footer_text_under_logo && <p className='text-sm text-center' dangerouslySetInnerHTML={{ __html: footer_text_under_logo }} />}
-                    </div>
-
-                    {/* Footer Links */}
-                    {loading ? renderSkeleton() : renderLinks()}
-                    <div className="flex flex-col gap-[10px]  " >
-                        {footer_phone_number && (
-                            <div className=' flex items-center gap-[5px] text-lg '>
-                                <p className="w-[35px] h-[35px] border-white flex items-center justify-center border-[2px]     " > <i className="fa-solid fa-phone"></i> </p>
-                                {footer_phone_number}
-                            </div>
-                        )}
-                        {footer_email && (
-                            <div className=' flex items-center gap-[5px] text-lg '>
-                                <p className="w-[35px] h-[35px] border-white flex items-center justify-center border-[2px]     " > <i className="fa-solid fa-envelope"></i> </p>
-                                {footer_email}
-                            </div>
-                        )}
-                        {footer_social_icons?.length > 0 && (
-                            <div className='flex items-center  gap-4 '>
-                                {footer_social_icons.map((icon, index) => (
-                                    <a key={index} href={icon.iconURL} target='_blank' rel='noopener noreferrer' className='text-white w-[35px] h-[35px] flex items-center justify-center border-[2px] hover:bg-white duration-300 border-white  hover:text-[var(--second)] text-lg transition-colors'>
-                                        <i className={icon.icon}></i>
-                                    </a>
-                                ))}
-                            </div>
-                        )}
-
-                    </div>
-                </div>
-
-
-                <div className='flex items-center w-full justify-center border-t border-t-white/20   gap-[5px] mt-[20px] '>
-                    {!loadingSetting && footer_copyrights_switch == 1 && footer_copyright && <div className='mt-[20px] text-sm text-center' dangerouslySetInnerHTML={{ __html: footer_copyright }} />}
-                </div>
+  const renderSkeleton = () => (
+    <div className='grid grid-cols-1 md:grid-cols-3 gap-8 w-full'>
+      {Array(3)
+        .fill(0)
+        .map((_, index) => (
+          <div key={index} className='flex flex-col gap-4'>
+            <div className='w-32 h-6 bg-white/10 animate-pulse rounded-full' />
+            <div className='flex flex-col gap-3'>
+              {Array(4)
+                .fill(0)
+                .map((_, i) => (
+                  <div key={i} className='w-full h-4 bg-white/10 animate-pulse rounded-full' />
+                ))}
             </div>
-        </footer>
-    );
+          </div>
+        ))}
+    </div>
+  );
+
+  return (
+    <footer className='bg-[var(--main)] text-white'>
+
+      <div className='container  !py-12'>
+        {/* Main Footer Grid */}
+        <div className={`grid grid-cols-1 lg:grid-cols-4 gap-12  ${footer_alignment === 'vertical' ? '!grid-cols-1 !place-items-center' : ''}`}>
+          {/* Brand Column */}
+          <div className={`flex flex-col gap-6 ${footer_alignment === 'vertical' ? 'items-center text-center' : ''}`}>
+            {footer_logo_switch === '1' && (
+              <Link to='/' className='group'>
+                <img src='/logo-white.png' alt='Logo' className='w-40 h-auto object-contain opacity-90 hover:opacity-100 transition-opacity duration-200' loading='lazy' />
+              </Link>
+            )}
+
+            {text_under_logo_status === 'yes' && footer_text_under_logo && <div className='text-white/80 font-light leading-relaxed' dangerouslySetInnerHTML={{ __html: footer_text_under_logo }} />}
+          </div>
+
+          {/* Links Columns */}
+          <div className='lg:col-span-2'>{loading ? renderSkeleton() : <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 ${footer_alignment === 'vertical' ? '!grid-cols-1 !place-items-center !text-center' : ''}`}>{renderLinks()}</div>}</div>
+
+          {/* Contact Column */}
+          <div className={`flex flex-col gap-6 ${footer_alignment === 'vertical' ? 'items-center text-center' : ''}`}>
+            <h3 className='text-lg font-semibold text-white tracking-wide'>Contact Us</h3>
+
+            <div className='flex flex-col gap-2'>
+              {footer_phone_number && (
+                <div className='flex items-center gap-3'>
+                  <div className='w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0'>
+                    <Phone className='w-4 h-4 text-white/80' />
+                  </div>
+                  <a href={`tel:${footer_phone_number}`} className='text-white/80 hover:text-white transition-colors'>
+                    {footer_phone_number}
+                  </a>
+                </div>
+              )}
+
+              {footer_email && (
+                <div className='flex items-center gap-3'>
+                  <div className='w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0'>
+                    <Mail className='w-4 h-4 text-white/80' />
+                  </div>
+                  <a href={`mailto:${footer_email}`} className='text-white/80 hover:text-white transition-colors'>
+                    {footer_email}
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Social Icons */}
+            {footer_social_icons?.length > 0 && (
+              <div className='flex flex-wrap gap-3 mt-2'>
+                {footer_social_icons.map((icon, index) => (
+                  <a key={index} href={icon.iconURL} target='_blank' rel='noopener noreferrer' className='w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-colors duration-200' aria-label={`Social media link ${index + 1}`}>
+                    <i className={`${icon.icon} text-lg text-white`}></i>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Copyright Section */}
+        {!loadingSetting && footer_copyrights_switch === '1' && footer_copyright && (
+          <div className='border-t border-white/10 mt-12 pt-8 text-center'>
+            <div className='text-sm text-white/60' dangerouslySetInnerHTML={{ __html: footer_copyright }} />
+          </div>
+        )}
+      </div>
+    </footer>
+  );
 }

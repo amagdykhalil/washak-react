@@ -2,16 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 @import url(https://fonts.googleapis.com/css?family=Share+Tech+Mono:regular);
-/* <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet"> */
-
-
-
 @font-face {
   font-family: 'Numbers';
   src: url('/public/font/DigitalNumbers-Regular.ttf') format('truetype');
   font-weight: 100 900; /* Supports variable font weights */
   font-style: normal;
 }
+
+
+:root{
+    --main : #133772 ;
+    --hover-main : #0e2c60 ;
+    --second : #FCA120 ;
+
+    --black-1 : #252A50 ;
+    --black-2 : #454545 ;
+    --black-3 : #A5A5A5 ;
+    --black-4 : #A0A9BB ;
+
+
+
+    --border-bg : #e5e7eb8f ;
+}
+
+
+
 
 li {
   list-style: none;
@@ -73,20 +88,6 @@ body {
   font-family: Numbers !important;
 }
 
-:root{
-    --main : #133772 ;
-    --hover-main : #0e2c60 ;
-    --second : #FCA120 ;
-
-    --black-1 : #252A50 ;
-    --black-2 : #454545 ;
-    --black-3 : #A5A5A5 ;
-    --black-4 : #A0A9BB ;
-
-
-
-    --border-bg : #e5e7eb8f ;
-}
 
 [dir="rtl"] body {
     font-family: "Alexandria" !important;
