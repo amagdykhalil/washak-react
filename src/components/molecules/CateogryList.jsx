@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import HeadTitle from'../atoms/HeadTitle';
+import Img from '../atoms/Image';
 
 const CategoryList = ({ Categories , order , loading }) => {
     return (
@@ -28,7 +29,7 @@ const CategoryList = ({ Categories , order , loading }) => {
                     {Categories?.categories?.map((e, i) => (
                         <Link to={e?.slug} key={i} className='cursor-pointer duration-300 group max-w-fit w-full'>
                             <div className='group-hover:scale-[1.1] duration-500 overflow-hidden h-[110px] p-[10px] max-lg:p-[5px] rounded-md shadow-inner border border-gray-100  ' >
-                                <img className='group-hover:scale-[1.1] duration-500  rounded-md w-full h-full object-cover' src={e.image_url} alt={e.name} width={160} height={130} />
+                                <Img className='group-hover:scale-[1.1] duration-500  rounded-md w-full h-full object-cover' src={e.image_url} alt={e.name} width={160} height={130} />
                             </div>
                             <span className='text-base mb-[10px] max-lg:mt-[10px] max-lg:text-sm text-center block mt-[15px] text-[#4A4A4A]'>{e.name}</span>
                         </Link>

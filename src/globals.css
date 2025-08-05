@@ -27,6 +27,14 @@
 
 
 
+.box-3d {
+  box-shadow:  2px 2px 5px #b8b9be, -3px -3px 7px #fff!important;
+  background-color: #eeeeee60!important ;
+  border: .0625rem solid rgba(243,247,250,.05);
+}
+
+
+
 
 li {
   list-style: none;
@@ -233,7 +241,7 @@ html {
 .img-switcher-2 {
     position: relative;
     width: 100%;
-    height: 290px;
+     aspect-ratio: 1 / 1;
     overflow: hidden;
     cursor: pointer;
     border-radius: 8px;
@@ -250,21 +258,18 @@ html {
     transition: opacity 0.8s ease, transform 0.8s ease;
   }
   
-  /* Base image: fully visible at start */
   .img-switcher-2 .base {
     z-index: 1;
     opacity: 1;
     transform: scale(1);
   }
   
-  /* Overlay image: hidden and slightly zoomed in */
   .img-switcher-2 .overlay {
     z-index: 2;
     opacity: 0;
     transform: scale(1.2);
   }
   
-  /* On hover, fade out base & fade in overlay with zoom effect */
   .product-item:hover .base {
     opacity: 0;
     transform: scale(0.8);

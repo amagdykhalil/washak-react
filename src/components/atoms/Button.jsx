@@ -45,7 +45,7 @@ export default function Button({
       ) : (
         <>
           <div className="text-nowrap">{name}</div>
-          <span>{icon}</span>
+          {icon && <span>{icon}</span>}
         </>
       )}
     </div>

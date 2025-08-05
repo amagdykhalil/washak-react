@@ -6,12 +6,13 @@ import 'swiper/css/effect-creative'; // import fade effect CSS
 
 import 'swiper/css';
 import 'swiper/css/pagination';
+import Img from './Image';
 
 export default function BannerSlider({ data, order, loading }) {
     const SkeletonBanner = () => <div className='w-full max-md:!h-[230px] !h-[400px] skeleton' />;
 
     return (
-        <div className={`container max-sm:!px-[10px] ]`} style={{ order: order }}>
+        <div className={`container max-sm:!px-[10px] ]`} style={{ order: order && order }}>
             {loading ? (
                 <SkeletonBanner />
             ) : (
@@ -38,7 +39,8 @@ export default function BannerSlider({ data, order, loading }) {
                     className='w-full h-[400px] max-md:h-[240px] '>
                     {data?.images.map((src, i) => (
                         <SwiperSlide key={i}>
-                            <img className=' bg-gray-200 rounded-[20px] w-full h-full object-cover ' src={src?.image} alt={`Banner ${i + 1}`} width={1500} height={500} />
+                            <Img className=' bg-gray-200 rounded-[20px] w-full h-full object-cover ' src={src?.image} alt={`Banner ${i + 1}`} width={1500} height={500} />
+                            {/* <img className=' bg-gray-200 rounded-[20px] w-full h-full object-cover ' src={src?.image} alt={`Banner ${i + 1}`} width={1500} height={500} /> */}
                         </SwiperSlide>
                     ))}
                 </Swiper>

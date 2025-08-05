@@ -1,23 +1,36 @@
+
+
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Notification } from './Notification';
 
+export const BaseUrl = "https://dukanomar.com/api"
 export const baseImage = "https://cdn.washak.net/"
+
+
+
+const getStoreDomain = () => {
+  const isLocal = window.location.hostname === 'localhost';
+  return isLocal ? 'ahmed-shtya.dukanomar.com' : window.location.hostname;
+};
+
 export const api = axios.create({
-    baseURL: 'https://dukanomar.com/api',
-    headers: {
-        'X-Store-Domain': 'alitest256.dukanomar.com',
-    },
+  baseURL: BaseUrl,
+  headers: {
+    'X-Store-Domain': getStoreDomain(),
+  },
 });
 
 export const useApiGet = (url, successMsg, errorMsg) => {
     const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let isMounted = true;
 
         const fetchData = async () => {
+            if(!url) return
             setLoading(true);
             try {
                 const response = await api.get(url);
@@ -27,7 +40,8 @@ export const useApiGet = (url, successMsg, errorMsg) => {
                 }
             } catch (error) {
                 if (isMounted) {
-                    Notification(errorMsg || error.message, 'error');
+                    setError(error?.response?.data)
+                    // Notification(errorMsg || error.message, 'error');
                 }
             } finally {
                 if (isMounted) setLoading(false);
@@ -41,5 +55,8 @@ export const useApiGet = (url, successMsg, errorMsg) => {
         };
     }, [url]);
 
-    return { data, loading };
+    return { data, loading , error };
 };
+
+
+

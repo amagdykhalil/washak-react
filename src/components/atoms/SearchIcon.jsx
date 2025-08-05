@@ -1,37 +1,87 @@
 import { Search, X } from 'lucide-react';
-import { useState } from 'react';
-import { ProductsData } from './ProductCarousel';
+import { useState, useRef, useEffect } from 'react';
+import { baseImage, BaseUrl, useApiGet } from '../../config/Api';
+import Img from './Image';
+import { Link } from 'react-router-dom';
+// hooks/useDebounce.js
+ 
 export default function SearchIcon() {
-    const [open, setOpen] = useState(false);
-    const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const searchRef = useRef(null);
+  const debouncedQuery = useDebounce(query, 500); // Debounce the search query
 
-    const filtered = query ? ProductsData.products.filter(product => product.title.toLowerCase().includes(query.toLowerCase())) : ProductsData.products.slice(0, 10);
+  // Fetch search results only when there's a debounced query
+  const { data, loading } = useApiGet(debouncedQuery ? `/search-store-products?search=${encodeURIComponent(debouncedQuery)}` : null);
 
-    const handleClick = () => setOpen(prev => !prev);
+  const products = data?.data?.data || [];
 
-    return (
-        <div className='relative inline-block'>
-            <div className={`flex items-center gap-2 bg-gray-100 p-2 rounded-full transition-all duration-300 ${open ? 'w-64' : 'w-[55px]'} overflow-hidden`}>
-                <div className={`flex-none flex items-center justify-center ${!open ? ' bg-gray-200/70 ' : 'text-white bg-red-500 '}  w-[40px] h-[40px] rounded-full  cursor-pointer`} onClick={handleClick}>
-                    {!open ? <i className='fa-solid fa-magnifying-glass text-2xl '></i> : <X size={24} />}
-                </div>
-                {open && <input type='text' className='bg-transparent focus:outline-none w-full' placeholder='بحث...' value={query} onChange={e => setQuery(e.target.value)} />}
-            </div>
+  const handleClick = () => setOpen(prev => !prev);
 
-            {open && (
-                <ul className='absolute left-0 mt-2 w-64 bg-gray-100 text-[#333]/70 rounded-md shadow-lg z-10 max-h-[300px] overflow-auto'>
-                    {filtered.length ? (
-                        filtered.map(item => (
-                            <li key={item.id} className='px-4 py-2 hover:bg-gray-200 cursor-pointer flex items-center gap-2'>
-                                <img src={item.images[0]?.cdn_url} alt={item.title} className='w-10 h-10 rounded object-cover' />
-                                <span className='text-sm'>{item.title}</span>
-                            </li>
-                        ))
-                    ) : (
-                        <li className='px-4 py-2'>لا يوجد نتائج</li>
-                    )}
-                </ul>
-            )}
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Close dropdown when an item is clicked
+  const handleItemClick = () => {
+    setOpen(false);
+    setQuery(''); // Optional: clear the search query
+  };
+
+  return (
+    <div className='relative inline-block' ref={searchRef}>
+      <div className={`flex items-center gap-2 bg-gray-100 p-2 rounded-full transition-all duration-300 ${open ? 'w-64' : 'w-[55px]'} overflow-hidden`}>
+        <div className={`flex-none flex items-center justify-center ${!open ? ' bg-gray-200/70 ' : 'text-white bg-red-500 '}  w-[40px] h-[40px] rounded-full  cursor-pointer`} onClick={handleClick}>
+          {!open ? <i className='fa-solid fa-magnifying-glass text-2xl '></i> : <X size={24} />}
         </div>
-    );
+        {open && <input type='text' className='bg-transparent focus:outline-none w-full' placeholder='بحث...' value={query} onChange={e => setQuery(e.target.value)} autoFocus />}
+      </div>
+
+      {open && (
+        <ul className='absolute left-0 mt-2 w-64 bg-gray-100 text-[#333]/70 rounded-md shadow-lg z-10 max-h-[300px] overflow-auto'>
+          {loading ? (
+            <li className='px-4 py-2'>جاري التحميل...</li>
+          ) : products.length ? (
+            products.map(item => (
+              <Link to={`/product/${item.slug}`} key={item.id} className='px-4 py-2 hover:bg-gray-200 cursor-pointer flex items-center gap-2 block' onClick={handleItemClick}>
+                {/* Use the first media image if available */}
+                {item.medias?.length ? <Img src={baseImage + item.medias[0].url} alt={item.title} className='w-10 h-10 rounded object-cover' /> : <div className='w-10 h-10 rounded bg-gray-300'></div>}
+                <span className='text-xs truncate'>{item.title}</span>
+              </Link>
+            ))
+          ) : (
+            <li className='px-4 py-2'>{query ? 'لا يوجد نتائج' : 'اكتب للبحث عن منتجات'}</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+
+
+  function useDebounce(value, delay) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
 }

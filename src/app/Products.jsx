@@ -4,13 +4,20 @@ import FeatureList from '../components/molecules/FeatureList';
 import ProductSkeleton from '../components/skeleton/ProductSkeleton';
 import { useEffect, useState, useMemo } from 'react';
 import Breadcrumb from '../components/atoms/Breadcrumb';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import Image from '../components/atoms/Image';
+import Img from '../components/atoms/Image';
+import { addToCart } from '../hooks/hookCart';
+import { ShoppingCart } from 'lucide-react';
+import EmptyState from '../components/atoms/EmptyState';
+import { PriceBlock } from '../components/atoms/PriceCurrency';
 
 export default function Products() {
   const { data, loading } = useApiGet('/get-store-products');
   const [active, setActive] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 12;
+  const location = useLocation(); // Get the current location (URL)
 
   const { data: categoriesData, loading: categoriesLoading } = useApiGet('/get-store-categories');
 
@@ -31,6 +38,7 @@ export default function Products() {
 
     return result;
   }, [categoriesData]);
+  
   const products = {
     currency: 'ج.م',
     btnName: 'شراء الان',
@@ -54,15 +62,15 @@ export default function Products() {
       })) || [],
   };
 
-  const categorySlug = window.location.pathname.split('/').pop(); // Get last part of URL
   useEffect(() => {
+    const categorySlug = location.pathname.split('/').pop(); // Get last part of URL
     if (categorySlug) {
       const foundCategory = categories.find(cat => cat.slug === categorySlug);
       if (foundCategory) {
         setActive(foundCategory.key);
       }
     }
-  }, [categorySlug, categories]);
+  }, [ location.pathname, categories]);
 
   const filteredData = active === 'all' ? products.data : products.data.filter(p => p.type.includes(active));
 
@@ -131,31 +139,32 @@ export default function Products() {
                 .fill(0)
                 .map((_, i) => <ProductSkeleton key={i} />)
             : paginatedProducts.map((p, index) => (
-                <div data-aos={`${index % 2 == 0 ? 'zoom-in' : 'zoom-out'}`} key={p.id} className='group product-item  border border-[#EEEEEE] relative bg-white text-black rounded-lg p-3'>
-                  <div className='img-switcher-2 relative'>
+                <div data-aos={`${index % 2 == 0 ? 'fade-up' : 'fade-down'}`} key={p.id} className=' block max-w-[400px] group product-item  border border-[#EEEEEE] relative bg-white text-black rounded-lg p-3'>
+                  <Link to={`/product/${p.slug}`} className=' block img-switcher-2 relative'>
                     {p.discountLabel && <span className='absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]'>{p.discountLabel}</span>}
                     {p.fakeStock?.status && <span className='absolute shadow-xl top-[5px] right-[5px] z-[10] text-[10px] bg-red-500 text-white px-[10px] py-[5px] rounded-[6px]'>متبقي {p.fakeStock.left} فقط</span>}
-                    <img src={p.image} alt={p.title} className='base' />
+                    <Img id={`mainImage-${p.id}`} src={p.image} alt={p.title} className='base' />
                     <img src={p.secondImage} alt={p.title} className='overlay' />
-                  </div>
+                  </Link>
                   <span className='bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[5px] shadow-sm w-fit text-[10px] rounded-[10px] my-[10px] block mx-auto'>{p.cta}</span>
                   <span className='text-center w-full block text-[var(--black-1)] text-base my-[10px]'>{p.title}</span>
-                  <div className='flex items-center justify-center gap-[10px]'>
-                    <span className='text-[var(--second)] text-[15px]'>
-                      {p.salePrice} {products.currency}
-                    </span>
-                    {p.originalPrice !== p.salePrice && (
-                      <span className='text-[var(--black-4)] text-[12px] line-through'>
-                        {p.originalPrice} {products.currency}
-                      </span>
-                    )}
+
+                  <PriceBlock ar salePrice={p.salePrice} originalPrice={p.originalPrice} />
+
+                  <div className=' flex items-center justify-between mt-[20px] gap-2'>
+                    <Link to={`/product/${p.slug}`} className='btn-blue flex-1 text-center py-2 rounded-md'>
+                      {products.btnName}
+                      <img src={products.btnIcon} alt='' width={20} height={20} />
+                    </Link>
+
+                    <button onClick={() => addToCart(...data?.data?.data?.filter(product => product.id == p.id), `mainImage-${p.id}`)} className=' h-[40px] w-[40px] flex items-center justify-center  bg-[var(--second)] hover:scale-[0.9] hover:opacity-90 duration-300 text-white p-2 rounded-md transition-all shadow-md' title='أضف إلى السلة'>
+                      <ShoppingCart size={18} />
+                    </button>
                   </div>
-                  <Link to={`/product/${p.slug}`} className='btn-blue w-[calc(100%-30px)] mx-auto mt-[20px]'>
-                    {products.btnName}
-                    <img src={products.btnIcon} alt='' width={20} height={20} />
-                  </Link>
                 </div>
               ))}
+
+          {paginatedProducts.length === 0 && <EmptyState /> }
         </div>
 
         {/* Pagination */}

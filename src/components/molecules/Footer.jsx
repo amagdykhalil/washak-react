@@ -20,33 +20,38 @@ export default function Footer({ menu, loading, menuSetting, loadingSetting }) {
 
   if (footer_enable_switch !== '1') return null;
 
-  const renderLinks = () => {
-    return ['left', 'center', 'right'].map(position => {
-      const section = menu?.footer?.[position];
-      if (!section || !Array.isArray(section?.data)) return null;
+const renderLinks = () => {
+  return ['left', 'center', 'right'].map(position => {
+    const section = menu?.footer?.[position];
+    if (!section || !Array.isArray(section?.data)) return null;
 
-      return (
-        <div key={position} className='flex flex-col gap-4'>
-          <h3 className='text-lg font-semibold text-white tracking-wide'>{section.name || `Links ${position}`}</h3>
-          <ul className='flex flex-col gap-3'>
-            {section.data.map((link, index) => {
-              const isActive = path === link.href || path === `/${link.href}`;
-              return (
-                <li key={`${position}-${index}`} className='group'>
-                  <Link to={link.href?.startsWith('/') ? link.href : `/${link.href || '#'}`} className='relative block transition-all duration-200'>
-                    <span className={`relative text-white/80 hover:text-white transition-colors duration-200 ${isActive ? 'font-medium text-white' : ''}`}>
-                      {link.text || `Link ${index + 1}`}
-                      <span className={`absolute -bottom-1 left-0 h-0.5 bg-[var(--second)] transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      );
-    });
-  };
+    return (
+      <div key={position} className='flex flex-col gap-4'>
+        <h3 className='text-lg font-semibold text-white tracking-wide'>{section.name || `Links ${position}`}</h3>
+        <ul className='flex flex-col gap-3'>
+          {section.data.map((link, index) => {
+            const isActive = path === link.href || path === `/${link.href}`;
+
+            // تحقق إذا كان يوجد `page_slug` في الرابط
+            const fullHref = link.page_slug ? `${link.page_slug}${link.href}` : link.href;
+
+            return (
+              <li key={`${position}-${index}`} className='group'>
+                <Link to={fullHref?.startsWith('/') ? fullHref : `/${fullHref || '#'}`} className='relative block transition-all duration-200'>
+                  <span className={`relative text-white/80 hover:text-white transition-colors duration-200 ${isActive ? 'font-medium text-white' : ''}`}>
+                    {link.text || `Link ${index + 1}`}
+                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-[var(--second)] transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  });
+};
+
 
   const renderSkeleton = () => (
     <div className='grid grid-cols-1 md:grid-cols-3 gap-8 w-full'>
@@ -69,7 +74,6 @@ export default function Footer({ menu, loading, menuSetting, loadingSetting }) {
 
   return (
     <footer className='bg-[var(--main)] text-white'>
-
       <div className='container  !py-12'>
         {/* Main Footer Grid */}
         <div className={`grid grid-cols-1 lg:grid-cols-4 gap-12  ${footer_alignment === 'vertical' ? '!grid-cols-1 !place-items-center' : ''}`}>
