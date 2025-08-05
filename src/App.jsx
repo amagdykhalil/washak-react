@@ -46,9 +46,8 @@ function App() {
     return items.map(item => {
       let path = '';
 
-      // إذا كان `page_slug` غير فارغ وكان هناك قيمة صالحة للـ id
       if (item.page_type === 'product_page' || item.page_type === 'category_page') {
-        path = item?.page_slug ? `/${item.page_slug}${item.href}` : `/${item.href}`;
+        path = item?.page_slug ? `/${item.page_slug}:${item.href}` : `/${item.href}`;
       } else {
         path = item?.page_slug ? `/${item.page_slug}${item.href}` : `/${item.href}`;
       }
@@ -79,11 +78,12 @@ function App() {
         case 'custom_page':
           component = <Cart />;
           break;
-        // default:
-        //   component = <NotFoundPage />;
-        //   break;
+        default:
+          component = <NotFoundPage />;
+          break;
       }
 
+        console.log(path);
       return <Route key={path} path={path} element={component} />;
     });
   };
@@ -98,9 +98,9 @@ function App() {
         <Route path='/' element={<Home />} />
 
         {/* Static routes */}
+        <Route path='/product/:id' element={<Product />} />
         <Route path='/category' element={<Products />} />
         <Route path='/products' element={<Products />} />
-        <Route path='/product/:id' element={<Product />} />
         <Route path='/thank-you-page' element={<ThankYouPage />} />
         <Route path='/cart' element={<Cart />} />
 
@@ -110,8 +110,7 @@ function App() {
         {menu?.footer?.center && generateRoutes(menu?.footer?.center?.data)}
         {menu?.footer?.right && generateRoutes(menu?.footer?.right?.data)}
 
-        {/* Catch-all route for unmatched paths */}
-        <Route path='*' element={<NotFoundPage />} />
+         <Route path='*' element={<NotFoundPage />} />
       </Routes>
       <Toaster />
       <Footer menu={menu} loading={loading} menuSetting={menuSetting} loadingSetting={loadingSetting} />

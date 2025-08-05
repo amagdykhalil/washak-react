@@ -25,50 +25,50 @@ export default function Home() {
         switch (section.section) {
           case 'Slider_Section':
             return (
-              <div className='pb-8 md:pb-12' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <BannerSlider key={section.id} order={section.sort_order} loading={loading} data={section.data} />
+              <div key={section.id} className='pb-8 md:pb-12' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
+                <BannerSlider  order={section.sort_order} loading={loading} data={section.data} />
               </div>
             );
           case 'Banners_Section':
             return (
-              <div className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <BannerSection key={section.id} order={section.sort_order} loading={loading} data={section.data} />
+              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
+                <BannerSection  order={section.sort_order} loading={loading} data={section.data} />
               </div>
             );
           case 'Dynamic_Products':
             return (
-              <div className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <ProductSection key={section.id} sectionData={section} loading={loading} />
+              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
+                <ProductSection  sectionData={section} loading={loading} />
               </div>
             );
           case 'Product_List':
             return (
-              <div className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <ProductSection key={section.id} sectionData={section} loading={loading} />
+              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
+                <ProductSection  sectionData={section} loading={loading} />
               </div>
             );
           case 'Categories':
             return (
-              <div className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <CategoryList key={section.id} order={section.sort_order} Categories={section.data} loading={loading} />
+              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
+                <CategoryList  order={section.sort_order} Categories={section.data} loading={loading} />
               </div>
             );
           case 'Content_With_Icon':
             return (
-              <div className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <FeatureList key={section.id} order={section.sort_order} data={section.data} loading={loading} />
+              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
+                <FeatureList  order={section.sort_order} data={section.data} loading={loading} />
               </div>
             );
           case 'Map_Section':
             return (
-              <div className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <MapSection key={section.id} order={section.sort_order} data={section.data} loading={loading} />
+              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
+                <MapSection  order={section.sort_order} data={section.data} loading={loading} />
               </div>
             );
           case 'Html_Content':
             return (
-              <div className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <HtmlContentSection key={section.id} order={section.sort_order} data={section.data} loading={loading} />
+              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
+                <HtmlContentSection  order={section.sort_order} data={section.data} loading={loading} />
               </div>
             );
           default:
