@@ -89,7 +89,7 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router basename="/app">
       <Navbar menu={menu} loading={loading} menuSetting={menuSetting} loadingSetting={loadingSetting} />
 
 
