@@ -92,6 +92,7 @@ function App() {
     <Router>
       <Navbar menu={menu} loading={loading} menuSetting={menuSetting} loadingSetting={loadingSetting} />
 
+
       <Routes>
         {/* Home route */}
         <Route path='/' element={<Home />} />
