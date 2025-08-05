@@ -87,6 +87,13 @@ function App() {
       <Routes>
         {/* Home route */}
         <Route path='/' element={<Home />} />
+        
+        {/* Static routes */}
+        <Route path='/category' element={<Products />} />
+        <Route path='/products' element={<Products />} />
+        <Route path='/product/:id' element={<Product />} />
+        <Route path='/thank-you-page' element={<ThankYouPage />} />
+        <Route path='/cart' element={<Cart />} />
 
         {/* Generated routes from menu */}
         {menu?.header?.data && generateRoutes(menu?.header?.data)}
@@ -94,12 +101,6 @@ function App() {
         {menu?.footer?.center && generateRoutes(menu?.footer?.center?.data)}
         {menu?.footer?.right && generateRoutes(menu?.footer?.right?.data)}
 
-        {/* Static routes */}
-        <Route path='/category' element={<Products />} />
-        <Route path='/products' element={<Products />} />
-        <Route path='/product/:id' element={<Product />} />
-        <Route path='/thank-you-page' element={<ThankYouPage />} />
-        <Route path='/cart' element={<Cart />} />
 
         {/* Catch-all route for unmatched paths */}
         <Route path='*' element={<NotFoundPage />} />
