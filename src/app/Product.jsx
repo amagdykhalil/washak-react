@@ -160,10 +160,10 @@ export default function Product() {
     );
   }
 
-  // if (error) {
-  //   navigate('/not-found');
-  //   return null;
-  // }
+  if (error) {
+    navigate('/not-found');
+    return null;
+  }
 
   return (
     <div className='bg-[#f8fafb]'>
