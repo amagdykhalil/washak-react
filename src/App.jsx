@@ -84,7 +84,7 @@ function App() {
   return (
     <Router>
       <Navbar menu={menu} loading={loading} menuSetting={menuSetting} loadingSetting={loadingSetting} />
-      Lorem ipsum, dolor sit amet consectetur adipisicing elit. Placeat perspiciatis esse quis facilis voluptatibus, veritatis dolor magni ad quia, ab quos eveniet aliquid, quisquam hic et! Aliquam blanditiis ad perferendis.
+
       <Routes>
         {/* Home route */}
         <Route path='/' element={<Home />} />
