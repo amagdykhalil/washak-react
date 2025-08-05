@@ -46,11 +46,18 @@ function App() {
     return items.map(item => {
       let path = '';
 
-      if (item.page_type === 'product_page'||  item.page_type === 'category_page') {
-        path = item?.page_slug !== '' ? `/${item.page_slug}:id` : `/${item.href}`; 
+      // إذا كان `page_slug` غير فارغ وكان هناك قيمة صالحة للـ id
+      if (item.page_type === 'product_page' || item.page_type === 'category_page') {
+        path = item?.page_slug ? `/${item.page_slug}${item.href}` : `/${item.href}`;
       } else {
-        path = item?.page_slug !== '' ? `/${item.page_slug}${item.href}` : `/${item.href}`; // Default route pattern
+        path = item?.page_slug ? `/${item.page_slug}${item.href}` : `/${item.href}`;
       }
+
+      // تأكد من أن الرابط لا يحتوي على undefined
+      if (path.includes(':id')) {
+        path = path.replace(':id', item.href || 'default-id');
+      }
+
       let component = null;
 
       switch (item.page_type) {
@@ -101,7 +108,6 @@ function App() {
         {menu?.footer?.left && generateRoutes(menu?.footer?.left?.data)}
         {menu?.footer?.center && generateRoutes(menu?.footer?.center?.data)}
         {menu?.footer?.right && generateRoutes(menu?.footer?.right?.data)}
-
 
         {/* Catch-all route for unmatched paths */}
         <Route path='*' element={<NotFoundPage />} />
