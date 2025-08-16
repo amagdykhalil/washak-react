@@ -1,86 +1,109 @@
 'use client';
-import { useApiGet } from '../config/Api';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectCreative, EffectFade } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-creative';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
-import Img from '../components/atoms/Image';
-import { addToCart } from '../hooks/hookCart';
+import Img from '../components/atoms/Image.jsx';
 import HeadTitle from '../components/atoms/HeadTitle.jsx';
-import { PriceBlock } from '../components/atoms/PriceCurrency.jsx';
 import Button from '../components/atoms/Button.jsx';
+import SkeletonCard from '../components/skeleton/SkeletonCard.jsx';
+import ProductCard from '../components/pages/product/ProductCard.jsx';
+import { getFullPath } from '../helper/getFullPath.js';
+import { useStoreHomeSections } from '../hooks/useStoreHomeSections.js';
 
 export default function Home() {
-  const { data, loading } = useApiGet('/get-store-home-sections');
+  const { loading, data } = useStoreHomeSections();
+
   const sortedSections = data?.data?.sections?.sort((a, b) => a.sort_order - b.sort_order) || [];
 
   return (
-    <div className='pt-[30px] max-sm:!pt-[10px] flex flex-col   min-h-screen '>
-      {sortedSections.map(section => {
+    <div className="pt-[30px] max-sm:!pt-[10px] flex flex-col min-h-screen">
+      {sortedSections.map((section) => {
         switch (section.section) {
           case 'Slider_Section':
             return (
-              <div key={section.id} className='pb-8 md:pb-12' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <BannerSlider  order={section.sort_order} loading={loading} data={section.data} />
-              </div>
+              <SectionWrapper key={section.id} order={section.sort_order} className="!py-0 !pb-8 md:!pb-12">
+                <BannerSlider order={section.sort_order} loading={loading} data={section.data} />
+              </SectionWrapper>
             );
+
           case 'Banners_Section':
             return (
-              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <BannerSection  order={section.sort_order} loading={loading} data={section.data} />
-              </div>
+              <SectionWrapper key={section.id} order={section.sort_order}>
+                <BannerSection order={section.sort_order} loading={loading} data={section.data} />
+              </SectionWrapper>
             );
+
           case 'Dynamic_Products':
-            return (
-              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <ProductSection  sectionData={section} loading={loading} />
-              </div>
-            );
           case 'Product_List':
             return (
-              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <ProductSection  sectionData={section} loading={loading} />
-              </div>
+              <SectionWrapper key={section.id} order={section.sort_order}>
+                <ProductSection sectionData={section} loading={loading} />
+              </SectionWrapper>
             );
+
           case 'Categories':
             return (
-              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <CategoryList  order={section.sort_order} Categories={section.data} loading={loading} />
-              </div>
+              <SectionWrapper key={section.id} order={section.sort_order}>
+                <CategoryList order={section.sort_order} Categories={section.data} loading={loading} />
+              </SectionWrapper>
             );
+
           case 'Content_With_Icon':
             return (
-              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <FeatureList  order={section.sort_order} data={section.data} loading={loading} />
-              </div>
+              <SectionWrapper key={section.id} order={section.sort_order}>
+                <FeatureList order={section.sort_order} data={section.data} loading={loading} />
+              </SectionWrapper>
             );
+
           case 'Map_Section':
             return (
-              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <MapSection  order={section.sort_order} data={section.data} loading={loading} />
-              </div>
+              <SectionWrapper key={section.id} order={section.sort_order}>
+                <MapSection order={section.sort_order} data={section.data} loading={loading} />
+              </SectionWrapper>
             );
+
           case 'Html_Content':
             return (
-              <div key={section.id} className=' py-8 md:py-16  ' style={{ background: section.sort_order % 2 == 0 ? '#fff' : '#f9fafb', order: section.sort_order }}>
-                <HtmlContentSection  order={section.sort_order} data={section.data} loading={loading} />
-              </div>
+              <SectionWrapper key={section.id} order={section.sort_order}>
+                <HtmlContentSection order={section.sort_order} data={section.data} loading={loading} />
+              </SectionWrapper>
             );
+
           default:
             return null;
         }
       })}
     </div>
   );
+
 }
 
+const SectionWrapper = ({
+  order,
+  children,
+  className = ''
+}) => {
+  return (
+    <div
+      className={`py-8 md:py-16 ${className}`}
+      style={{
+        background: order % 2 === 0 ? '#fff' : '#f9fafb',
+        order
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+
 // Banner Slider Component
-export function BannerSlider({ data, order, loading = true }) {
+function BannerSlider({ data, order, loading = false }) {
   const SkeletonBanner = () => <div className='w-full max-md:!h-[230px] !h-[400px] skeleton' />;
 
   return (
@@ -111,7 +134,7 @@ export function BannerSlider({ data, order, loading = true }) {
 }
 
 // Banner Section Component (for Banners_Section)
-export function BannerSection({ data, order, loading = true }) {
+function BannerSection({ data, order, loading = false }) {
   const SkeletonBanner = () => <div className='h-[400px] rounded-lg skeleton' />;
 
   return (
@@ -142,12 +165,17 @@ export function BannerSection({ data, order, loading = true }) {
 }
 
 // Product Section Component (handles both Dynamic_Products and Product_List)
-export function ProductSection({ sectionData, loading = true }) {
+function ProductSection({ sectionData, loading = false }) {
   const { section_info, products } = sectionData.data || {};
   const isSlider = section_info?.view_type === 'Slider';
-  const isGrid = section_info?.view_type === 'Grid';
+  const scrollType = section_info?.scroll_type || "Auto";
 
-  const [slidesPerView, setSlidesPerView] = useState(4);
+  const [slidesPerView, setSlidesPerView] = useState(5);
+  const [visibleCount, setVisibleCount] = useState(5); // عرض 4 منتجات في البداية
+  const loadMore = () => {
+    setVisibleCount(prevCount => prevCount + 4);
+  };
+
 
   useEffect(() => {
     const updateSlidesPerView = () => {
@@ -164,11 +192,11 @@ export function ProductSection({ sectionData, loading = true }) {
     return () => window.removeEventListener('resize', updateSlidesPerView);
   }, []);
 
-  const sliderConfig = {
+  const sliderConfig = useMemo(() => ({
     spaceBetween: 10,
     loop: true,
     speed: 1000,
-    slidesPerView: slidesPerView,
+    slidesPerView,
     slideToClickedSlide: true,
     modules: [Navigation, Autoplay, Pagination],
     navigation: {
@@ -178,63 +206,23 @@ export function ProductSection({ sectionData, loading = true }) {
     pagination: {
       clickable: true,
     },
-    autoplay: {
-      delay: 5000,
-      disableOnInteraction: false,
-    },
-  };
+    autoplay:
+      scrollType === "Auto"
+        ? {
+          delay: 5000,
+          disableOnInteraction: false,
+        }
+        : false,
+  }), [slidesPerView, scrollType]);
 
-  const SkeletonCard = () => (
-    <div className='animate-pulse flex-1 group shadow-sm border border-[#EEEEEE] bg-white rounded-lg px-3'>
-      <div className='bg-gray-200 h-[230px] rounded mb-4' />
-      <div className='h-3 bg-gray-200 rounded w-1/3 mx-auto mb-2' />
-      <div className='h-4 bg-gray-200 rounded w-1/2 mx-auto mb-4' />
-      <div className='flex justify-center gap-2 mb-4'>
-        <div className='h-4 bg-gray-200 rounded w-1/4' />
-        <div className='h-4 bg-gray-200 rounded w-1/6' />
-      </div>
-      <div className='h-8 bg-gray-200 rounded w-full' />
-    </div>
-  );
 
-  const ProductCard = ({ product }) => (
-    <div className='group product-item shadow-sm border border-[#EEEEEE] relative bg-white text-black rounded-lg p-3 h-full'>
-      <div className='img-switcher-2 relative   '>
-        {product.discount_percentage && <span className='absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]'>خصم {product.discount_percentage}%</span>}
-        <Img id={`mainImage-${product.id}`} src={product.images?.[0]?.cdn_url} alt={product.title} className='base w-full h-full  object-contain' />
-        <Img src={product.images?.[1]?.cdn_url} alt={product.title} className='overlay w-full h-full  object-contain' />
-      </div>
 
-      <span className='bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[8px] shadow-sm w-fit text-[10px] rounded-[10px] my-[15px] block mx-auto'>{product.category}</span>
 
-      <span className='text-center w-full block text-[var(--black-1)] text-base my-[10px] overflow-hidden text-ellipsis whitespace-nowrap' title={product.title}>
-        {product.title}
-      </span>
-
-      <PriceBlock originalPrice={product?.price?.regular} salePrice={product?.price?.current} ar />
-
-      <div className='flex items-center justify-between mt-[20px] gap-2'>
-        <Link to={`/product/${product.slug}`} className='btn-blue flex-1 text-center py-2 rounded-md'>
-          شراء الان
-          <img src='/icons/buy.png' alt='' width={20} height={20} />
-        </Link>
-
-        <button onClick={() => addToCart(product, `mainImage-${product.id}`)} className='h-[40px] w-[40px] flex items-center justify-center bg-[var(--second)] hover:scale-[0.9] hover:opacity-90 duration-300 text-white p-2 rounded-md transition-all shadow-md' title='أضف إلى السلة'>
-          <ShoppingCart size={18} />
-        </button>
-      </div>
-    </div>
-  );
-  const [visibleCount, setVisibleCount] = useState(4); // عرض 4 منتجات في البداية
-
-  const loadMore = () => {
-    setVisibleCount(prevCount => prevCount + 4);
-  };
   return (
     <div className='relative max-sm:!px-[20px]' style={{ order: sectionData.sort_order }}>
       <div className='container'>
         <div className='relative'>
-          <HeadTitle desc={section_info?.sub_titile} title={section_info?.title} />
+          <HeadTitle desc={section_info?.sub_titile} title={section_info?.title} loading={loading} />
 
           {loading ? (
             <div className='flex flex-nowrap overflow-x-hidden gap-4 py-[50px] px-[20px]'>
@@ -246,7 +234,7 @@ export function ProductSection({ sectionData, loading = true }) {
             </div>
           ) : products?.length > 0 ? (
             <>
-              {isSlider && (
+              {isSlider ? (
                 <div className='relative'>
                   <Swiper {...sliderConfig} className='!py-[50px] md:!px-[5px]'>
                     {products.map(product => (
@@ -272,22 +260,21 @@ export function ProductSection({ sectionData, loading = true }) {
                     </>
                   )}
                 </div>
-              )}
-
-              {isGrid && (
-                <>
-                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 py-[50px]'>
-                    {products.slice(0, visibleCount).map(product => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                  </div>
-                  {visibleCount < products.length && (
-                    <div className='flex justify-center py-4'>
-                      <Button name='عرض المزيد' onclick={loadMore} cn='!px-8' />
+              ) :
+                (
+                  <>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 py-[50px]'>
+                      {products.slice(0, visibleCount).map(product => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
                     </div>
-                  )}
-                </>
-              )}
+                    {visibleCount < products.length && (
+                      <div className='flex justify-center py-4'>
+                        <Button name='عرض المزيد' onclick={loadMore} cn='!px-8' />
+                      </div>
+                    )}
+                  </>
+                )}
             </>
           ) : (
             <div className='py-12 text-center text-gray-500'>لا توجد منتجات متاحة حالياً</div>
@@ -299,11 +286,11 @@ export function ProductSection({ sectionData, loading = true }) {
 }
 
 // Category List Component
-export const CategoryList = ({ Categories, order, loading = true }) => {
+const CategoryList = ({ Categories, order, loading = false }) => {
   return (
     <div className='container flex flex-col gap-12' style={{ order }}>
       {/* العنوان */}
-      {loading ? <div className='skeleton w-[150px] h-6 mx-auto rounded-md' /> : <HeadTitle title={Categories?.section_info?.title} desc={Categories?.section_info?.sub_titile} />}
+      <HeadTitle title={Categories?.section_info?.title} desc={Categories?.section_info?.sub_titile} loading={loading} />
 
       {/* القائمة أو الـ Skeleton */}
       {loading ? (
@@ -311,16 +298,21 @@ export const CategoryList = ({ Categories, order, loading = true }) => {
           {Array(5)
             .fill(0)
             .map((_, i) => (
-              <div key={i} className='flex flex-col items-center gap-3'>
-                <div className='skeleton w-[180px] h-[110px] rounded-md' />
-                <div className='skeleton w-[100px] h-4 rounded-md' />
+              <div
+                key={i}
+                className='w-[160px] flex flex-col items-center gap-3'
+              >
+                <div className='overflow-hidden w-full h-[110px] shadow-inner p-2 rounded-lg border border-gray-200'>
+                  <div className='skeleton w-full h-full rounded-md' />
+                </div>
+                <div className='skeleton w-[100px] h-4 rounded-md mt-4' />
               </div>
             ))}
         </div>
       ) : Categories?.categories?.length > 0 ? (
         <div className='flex flex-wrap justify-center gap-4 md:gap-6 xl:gap-8'>
           {Categories.categories.map((category, i) => (
-            <Link to={`${category.slug}`} key={i} className='  w-[160px] flex flex-col items-center transition-transform duration-300 hover:scale-105 group'>
+            <Link to={getFullPath("category/", category.slug)} key={i} className='  w-[160px] flex flex-col items-center transition-transform duration-300 hover:scale-105 group'>
               <div className='overflow-hidden w-full h-[110px] shadow-inner p-2 rounded-lg border border-gray-200 '>
                 <Img src={category.image_url} alt={category.name} width={160} height={110} className='w-full h-full object-cover rounded-md transition-transform duration-500 group-hover:scale-110' />
               </div>
@@ -336,7 +328,7 @@ export const CategoryList = ({ Categories, order, loading = true }) => {
 };
 
 // Feature List Component
-export function FeatureList({ order, data, loading = true }) {
+function FeatureList({ order, data, loading = false }) {
   const renderSkeleton = () => (
     <div className='container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
       {[...Array(4)].map((_, idx) => (
@@ -369,7 +361,7 @@ export function FeatureList({ order, data, loading = true }) {
 }
 
 // Map Section Component
-export function MapSection({ order, data, loading = true }) {
+function MapSection({ order, data, loading = false }) {
   const [mapError, setMapError] = useState(false);
 
   return (
@@ -404,7 +396,7 @@ export function MapSection({ order, data, loading = true }) {
 }
 
 // HTML Content Section Component
-export function HtmlContentSection({ data, loading = true }) {
+function HtmlContentSection({ data, loading = false }) {
   let html = '';
 
   if (!loading && data?.description) {

@@ -9,10 +9,12 @@ import HeadTitle from './HeadTitle';
 import { baseImage } from '../../config/Api';
 import Img from './Image';
 import { PriceBlock } from './PriceCurrency';
-import { addToCart } from '../../hooks/hookCart';
 import { ShoppingCart } from 'lucide-react';
+import { useAddToCart } from '../../hooks/cart/useAddToCart';
 
 export default function ProductCarouselRelated({ btnName = 'شراء الان', order, btnIcon = '/icons/buy.png', loading, bg, cn, arrowTop, products, title, subTitle, delay = 5000 }) {
+  const { handleAddToCart } = useAddToCart();
+
   const [count, setCount] = useState(4);
   const router = useNavigate()
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
   const config = {
     spaceBetween: 10,
     loop: true,
-    speed: 1000,
+    speed: 60000,
     slideToClickedSlide: true,
     modules: [Navigation, Autoplay, Pagination],
     navigation: {
@@ -49,8 +51,8 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
       disableOnInteraction: false,
     },
     breakpoints: {
-       1400: { slidesPerView: 4 },
-      950: { slidesPerView: 3  },
+      1400: { slidesPerView: 4 },
+      950: { slidesPerView: 3 },
       650: { slidesPerView: 2 },
       0: { slidesPerView: 1 },
     },
@@ -69,8 +71,10 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
     </div>
   );
 
-  const showArrows = products?.products?.length > count;
+  const showArrows = products?.length > count;
 
+
+  if (products?.length <= 0) return null;
   return (
     <div className={` ${!products && ' !hidden'} relative max-sm:!px-[20px]   `} style={{ order: order }}>
       <div className={`container ${cn} `}>
@@ -87,48 +91,73 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
             </div>
           ) : (
             <>
-              <Swiper {...config} className={`!py-[50px] ${arrowTop ? '!px-0' : 'md:!px-[5px]'}`}>
-                {products?.map(p => (
-                  <SwiperSlide key={p.id}>
-                    <div className='block group   product-item shadow-sm border  border-[#EEEEEE] relative bg-white text-black rounded-lg p-3'>
-                      <Link to={`/product/${p.slug}`} className=' block img-switcher-2 relative '>
-                        {p.discount_percentage && <span className='absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]  '> خصم {p.discount_percentage}% </span>}
+              <Swiper {...config} className={`!py-[50px] items-stretch ${arrowTop ? '!px-0' : 'md:!px-[5px]'}`}>
+                {products?.map(p => {
+
+                  const discountPercentage =
+                    p.price?.regular_price && p.price?.special_price
+                      ? ((p.price.regular_price - p.price.special_price) / p.price.regular_price) * 100
+                      : 0;
+
+                  const fakeDate = typeof p?.price?.fake_product_stock == "string" ? JSON.parse(p?.price?.fake_product_stock) : p?.price?.fake_product_stock;
+
+                  return <SwiperSlide key={p.id} i>
+                    <div className='group min-h-[537px] product-item shadow-sm border border-[#EEEEEE] relative bg-white text-black rounded-lg p-3 flex flex-col'>
+                      <Link to={`/product/${p.slug}`} className='block img-switcher-2 relative'>
+                        {discountPercentage && <span className='absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]'>{discountPercentage.toFixed(2)}%</span>}
+                        {fakeDate?.status == '1' && <span className='absolute shadow-xl top-[5px] right-[5px] z-[10] text-[10px] bg-red-500 text-white px-[10px] py-[5px] rounded-[6px]'>متبقي {fakeDate?.left} فقط</span>}
                         <Img id={`mainImage-${p.id}`} src={baseImage + p.medias?.[0]?.url} alt={p.title} className='base' />
                         <Img src={baseImage + p.medias?.[1]?.url} alt={p.title} className='overlay' />
                       </Link>
 
-                      <span className='bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[8px] shadow-sm w-fit text-[10px] rounded-[10px] my-[15px] block mx-auto '> {p.categories?.[0]?.name} </span>
-                      <span className='text-center w-full block text-[var(--black-1)] text-base my-[10px] overflow-hidden text-ellipsis whitespace-nowrap ' title={p.title}>
-                        {' '}
-                        {p.title}{' '}
-                      </span>
+                      {/* middle content that will grow to fill space */}
+                      <div className='flex-1 flex flex-col items-center justify-start text-center mt-3'>
+                        {p.categories?.[0]?.name && <span className='bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[8px] shadow-sm w-fit text-[10px] rounded-[10px] my-[6px] block'>
+                          {p.categories?.[0]?.name}
+                        </span>}
 
-                      <PriceBlock salePrice={p.price.special_price} originalPrice={p.price.regular_price} />
+                        <span
+                          className='w-full block text-[var(--black-1)] text-base my-[10px] overflow-hidden text-ellipsis whitespace-nowrap px-2'
+                          title={p.title}
+                        >
+                          title={p.title}
+                        </span>
 
-                      <div className='flex items-center justify-between mt-[20px] gap-2'>
-                        <div onClick={()=> router(`/product/${p.slug}`) }  className='btn-blue flex-1 text-center py-2 rounded-md'>
+                        <div className='mt-2 w-full'>
+                          <PriceBlock salePrice={p.price.special_price} originalPrice={p.price.regular_price} />
+                        </div>
+                      </div>
+
+                      {/* button row stays at the bottom */}
+                      <div className='flex items-center justify-between gap-2 mt-[10px]'>
+                        <div onClick={() => router(`/product/${p.slug}`)} className='btn-blue flex-1 text-center py-2 rounded-md'>
                           {btnName}
                           <img src='/icons/buy.png' alt='' width={20} height={20} />
                         </div>
 
-                        <button onClick={() => addToCart(p, `mainImage-${p.id}`)} className=' h-[40px] w-[40px] flex items-center justify-center bg-[var(--second)] hover:scale-[0.9] hover:opacity-90 duration-300 text-white p-2 rounded-md transition-all shadow-md' title='أضف إلى السلة'>
+                        <button
+                          onClick={() => handleAddToCart(p, `mainImage-${p.id}`)}
+                          className='h-[40px] w-[40px] flex items-center justify-center bg-[var(--second)] hover:scale-[0.9] hover:opacity-90 duration-300 text-white p-2 rounded-md transition-all shadow-md'
+                          title='أضف إلى السلة'
+                        >
                           <ShoppingCart size={18} />
                         </button>
                       </div>
                     </div>
                   </SwiperSlide>
-                ))}
+
+                })}
                 <div className='swiper-pagination !mt-6' />
               </Swiper>
 
               {showArrows && (
                 <>
-                  <button className={` ${arrowTop ? 'absolute !top-[55px] !left-[20px] ' : ''} max-sm:hidden  bg-[var(--main)] hover:bg-[var(--hover-main)] hover:scale-[1.1]  custom-prev w-[35px] h-[35px] rounded-full flex items-center justify-center absolute left-2 top-1/2 transform -translate-y-1/2 z-10 transition-colors  `}>
+                  <button className='max-sm:hidden bg-[var(--main)] hover:bg-[var(--hover-main)] hover:scale-[1.1] custom-prev w-[35px] h-[35px] rounded-full flex items-center justify-center absolute left-2 top-1/2 transform -translate-y-1/2 z-10 transition-colors'>
                     <svg width='15' height='9' viewBox='0 0 15 9' fill='none' xmlns='http://www.w3.org/2000/svg'>
                       <path d='M4.71592 0.920471L1.13637 4.50002M1.13637 4.50002L4.71592 8.07956M1.13637 4.50002H13.8636' stroke='#fff' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
                     </svg>
                   </button>
-                  <button className={`  ${arrowTop ? 'absolute !top-[55px]  !right-[calc(100%-95px)] ' : ''}  max-sm:hidden  bg-[var(--main)] hover:bg-[var(--hover-main)] hover:scale-[1.1]  custom-next w-[35px] h-[35px] rounded-full flex items-center justify-center absolute right-2 top-1/2 transform -translate-y-1/2 z-10 transition-colors`}>
+                  <button className='max-sm:hidden bg-[var(--main)] hover:bg-[var(--hover-main)] hover:scale-[1.1] custom-next w-[35px] h-[35px] rounded-full flex items-center justify-center absolute right-2 top-1/2 transform -translate-y-1/2 z-10 transition-colors'>
                     <svg width='15' height='9' viewBox='0 0 15 9' fill='none' xmlns='http://www.w3.org/2000/svg'>
                       <path d='M10.284 0.920471L13.8635 4.50002M13.8635 4.50002L10.284 8.07956M13.8635 4.50002H1.13623' stroke='white' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
                     </svg>

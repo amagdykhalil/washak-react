@@ -1,25 +1,14 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/molecules/Navbar';
-import Footer from './components/molecules/Footer';
-import Home from './app/Home';
-import { useAppContext } from './AppContext';
-import Products from './app/Products';
-import Product from './app/Product';
-import Cart from './app/cart/Cart';
-import NotFoundPage from './app/NotFound';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { useEffect, useState } from 'react';
-import ContactUsPage from './app/ContactUs';
-import { Toaster } from 'react-hot-toast';
-import ThankYouPage from './app/thank-you-page/page';
 import Lottie from 'lottie-react';
 import lottieAnimation from './lottie/Cart Glassmorphism.json';
-import DynamicPage from './app/DynamicPage'; // Dynamic Page Component
+import { ErrorBoundaryProvider } from './config/providers/ErrorBoundaryProvider';
+import { QueryProvider } from './config/providers/QueryProvider';
+import toast, { Toaster, useToasterStore } from 'react-hot-toast';
+import { RouterProvider } from './config/providers/RouterProvider';
 
 function App() {
-  const { menu, loading, menuSetting, loadingSetting } = useAppContext();
-
   useEffect(() => {
     AOS.init({
       duration: 500,
@@ -29,6 +18,17 @@ function App() {
       offset: -120, // Triggers animations a bit earlier
     });
   }, []);
+
+  const { toasts } = useToasterStore();
+  const TOAST_LIMIT = process.env.REACT_APP_TOAST_LIMIT || 3
+
+  useEffect(() => {
+    toasts
+      .filter((t) => t.visible) // Only consider visible toasts
+      .filter((_, i) => i >= TOAST_LIMIT) // Is toast index over limit?
+      .forEach((t) => toast.dismiss(t.id)); // Dismiss – Use toast.remove(t.id) for no exit animation
+  }, [toasts]);
+
 
   const [animLoading, setAnimLoading] = useState(true);
   if (animLoading) {
@@ -41,80 +41,23 @@ function App() {
     );
   }
 
-  // Simplify route handling
-  const generateRoutes = items => {
-    return items.map(item => {
-      let path = '';
 
-      if (item.page_type === 'product_page' || item.page_type === 'category_page') {
-        path = item?.page_slug ? `/${item.page_slug}:${item.href}` : `/${item.href}`;
-      } else {
-        path = item?.page_slug ? `/${item.page_slug}${item.href}` : `/${item.href}`;
-      }
 
-      // تأكد من أن الرابط لا يحتوي على undefined
-      if (path.includes(':id')) {
-        path = path.replace(':id', item.href || 'default-id');
-      }
-
-      let component = null;
-
-      switch (item.page_type) {
-        case 'home_page':
-          component = <Home />;
-          break;
-        case 'contact_page':
-          component = <ContactUsPage />;
-          break;
-        case 'category_page':
-          component = <Products />;
-          break;
-        case 'dynamic_page':
-          component = <DynamicPage slug={item.page_slug} />;
-          break;
-        case 'product_page':
-          component = <Product />;
-          break;
-        case 'custom_page':
-          component = <Cart />;
-          break;
-        default:
-          component = <NotFoundPage />;
-          break;
-      }
-
-        console.log(path);
-      return <Route key={path} path={path} element={component} />;
-    });
-  };
 
   return (
-    <Router>
-      <Navbar menu={menu} loading={loading} menuSetting={menuSetting} loadingSetting={loadingSetting} />
+    <ErrorBoundaryProvider>
+      <QueryProvider>
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          toastOptions={{
+            maxToasts: 3, // ✅ limit to 3
+          }}
+        />
 
-
-      <Routes>
-        {/* Home route */}
-        <Route path='/' element={<Home />} />
-
-        {/* Static routes */}
-        <Route path='/product/:id' element={<Product />} />
-        <Route path='/category' element={<Products />} />
-        <Route path='/products' element={<Products />} />
-        <Route path='/thank-you-page' element={<ThankYouPage />} />
-        <Route path='/cart' element={<Cart />} />
-
-        {/* Generated routes from menu */}
-        {menu?.header?.data && generateRoutes(menu?.header?.data)}
-        {menu?.footer?.left && generateRoutes(menu?.footer?.left?.data)}
-        {menu?.footer?.center && generateRoutes(menu?.footer?.center?.data)}
-        {menu?.footer?.right && generateRoutes(menu?.footer?.right?.data)}
-
-         <Route path='*' element={<NotFoundPage />} />
-      </Routes>
-      <Toaster />
-      <Footer menu={menu} loading={loading} menuSetting={menuSetting} loadingSetting={loadingSetting} />
-    </Router>
+        <RouterProvider />
+      </QueryProvider>
+    </ErrorBoundaryProvider>
   );
 }
 

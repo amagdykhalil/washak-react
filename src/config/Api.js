@@ -1,12 +1,15 @@
 
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Notification } from './Notification';
 
-export const BaseUrl = "https://dukanomar.com/api"
-export const baseImage = "https://cdn.washak.net/"
 
+export const BaseUrl =
+  process.env.REACT_APP_BASE_URL || 'https://dukanomar.com/api';
+
+export const baseImage =
+  process.env.REACT_APP_BASE_IMAGE || 'https://cdn.washak.net/';
 
 
 const getStoreDomain = () => {
@@ -21,42 +24,89 @@ export const api = axios.create({
   },
 });
 
+export async function BaseFetch(
+    url,
+    init = {}
+  ) {
+    try {
+        
+        const headers = new Headers(init?.headers || {});
+        headers.set('X-Store-Domain', getStoreDomain());
+
+        let response = await fetch(`${BaseUrl}${url}`, {
+          ...init,
+          signal: init.signal,
+          headers
+        });
+    
+        const data = await response.json();
+        if (data.status_code >= 400 && data.status_code < 600) {
+          throw new Error(data?.message);
+        }
+        
+        return data;
+      } catch (err) {
+                // treat fetch AbortError and other libs' cancel codes as "cancelled"
+        const isAbort = err && (err.name === 'AbortError' ); 
+            
+        if (isAbort) {
+            console.log('❌ Request was cancelled');
+        } else {
+            console.error('🔥 Request failed:', err);
+        }
+    
+        throw err;
+      }
+  }
+
+
 export const useApiGet = (url, successMsg, errorMsg) => {
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
-
+    const isMountedRef = useRef(true);
+  
     useEffect(() => {
-        let isMounted = true;
-
-        const fetchData = async () => {
-            if(!url) return
-            setLoading(true);
-            try {
-                const response = await api.get(url);
-                if (isMounted) {
-                    setData(response.data);
-                    if (successMsg) Notification(successMsg, 'success');
-                }
-            } catch (error) {
-                if (isMounted) {
-                    setError(error?.response?.data)
-                    // Notification(errorMsg || error.message, 'error');
-                }
-            } finally {
-                if (isMounted) setLoading(false);
-            }
-        };
-
-        fetchData();
-
-        return () => {
-            isMounted = false; 
-        };
-    }, [url]);
-
-    return { data, loading , error };
-};
-
-
-
+      isMountedRef.current = true;
+      const controller = new AbortController();
+  
+      const fetchData = async () => {
+        if (!url) {
+          if (isMountedRef.current) setLoading(false);
+          return;
+        }
+  
+        setLoading(true);
+        setError(null);
+  
+        try {
+          const response = await BaseFetch(url, { signal: controller.signal });
+          if (isMountedRef.current) {
+            setData(response);
+            if (successMsg) Notification(successMsg, 'success');
+          }
+        } catch (err) {
+          // ignore abort
+          if (err && (err.name === 'AbortError' || err.code === 'ERR_CANCELED')) {
+            return;
+          }
+  
+          if (isMountedRef.current) {
+            setError(err);
+            if (errorMsg) Notification(errorMsg, 'error');
+          }
+        } finally {
+          if (isMountedRef.current) setLoading(false);
+        }
+      };
+  
+      fetchData();
+  
+      return () => {
+        isMountedRef.current = false;
+        controller.abort();
+      };
+    }, [url, successMsg, errorMsg]);
+  
+    return { data, loading, error };
+  };

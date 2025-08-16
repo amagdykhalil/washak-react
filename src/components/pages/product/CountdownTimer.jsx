@@ -1,36 +1,62 @@
-import {useState , useEffect} from "react"
+import { useState, useEffect, useRef } from "react"
 
-export const CountdownTimer = ({ countdownData, text }) => {
+export const CountdownTimer = ({ countdownData, text, productId }) => {
   const [timeLeft, setTimeLeft] = useState({ ...countdownData });
+  const timerRef = useRef(null);
 
   useEffect(() => {
-    const totalSeconds = parseInt(timeLeft.day) * 86400 + parseInt(timeLeft.hour) * 3600 + parseInt(timeLeft.min) * 60 + parseInt(timeLeft.sec);
+    if (!countdownData?.status) return;
 
-    if (totalSeconds <= 0) return;
+    const storageKey = `countdownStart_${productId}`;
+    let startDate = localStorage.getItem(storageKey);
+
+    const countdownSeconds =
+      parseInt(countdownData.day) * 86400 +
+      parseInt(countdownData.hour) * 3600 +
+      parseInt(countdownData.min) * 60 +
+      parseInt(countdownData.sec);
+
+    // If no start date in storage OR expired, set new one
+    if (!startDate || Date.now() - Number(startDate) >= countdownSeconds * 1000) {
+      startDate = Date.now();
+      localStorage.setItem(storageKey, startDate);
+    } else {
+      startDate = Number(startDate);
+    }
+
+    const updateTimer = () => {
+      const elapsedSeconds = Math.floor((Date.now() - startDate) / 1000);
+      const remaining = countdownSeconds - elapsedSeconds;
+
+      if (remaining <= 0) {
+        localStorage.removeItem(storageKey); // Optional: clear so it restarts next time
+        // ✅ Change style directly using ref
+        if (timerRef.current) {
+          timerRef.current.style.backgroundColor = "#ffcccc";
+          timerRef.current.style.border = "2px solid red";
+          timerRef.current.style.padding = "8px";
+          timerRef.current.style.borderRadius = "6px";
+        }
+        return { day: '0', hour: '0', min: '0', sec: '0' };
+      }
+
+      const d = Math.floor(remaining / 86400);
+      const h = Math.floor((remaining % 86400) / 3600);
+      const m = Math.floor((remaining % 3600) / 60);
+      const s = remaining % 60;
+
+      return {
+        day: String(d),
+        hour: String(h),
+        min: String(m),
+        sec: String(s),
+      };
+    };
+
+    setTimeLeft(updateTimer()); // initialize immediately
 
     const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        let seconds = parseInt(prev.day) * 86400 + parseInt(prev.hour) * 3600 + parseInt(prev.min) * 60 + parseInt(prev.sec) - 1;
-
-        if (seconds <= 0) {
-          clearInterval(interval);
-          return { day: '0', hour: '0', min: '0', sec: '0' };
-        }
-
-        const d = Math.floor(seconds / 86400);
-        seconds %= 86400;
-        const h = Math.floor(seconds / 3600);
-        seconds %= 3600;
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-
-        return {
-          day: String(d),
-          hour: String(h),
-          min: String(m),
-          sec: String(s),
-        };
-      });
+      setTimeLeft(updateTimer());
     }, 1000);
 
     return () => clearInterval(interval);
@@ -39,7 +65,7 @@ export const CountdownTimer = ({ countdownData, text }) => {
   if (!countdownData?.status) return null;
 
   return (
-    <div className='flex flex-col justify-start w-fit mt-6 mb-4' data-aos='fade-up' data-aos-delay='300'>
+    <div ref={timerRef} className='flex flex-col justify-start w-fit mt-6 mb-4' data-aos='fade-up' data-aos-delay='300'>
       <div className='text-lg font-medium text-[var(--main)]'>{text || 'الوقت المتبقي على نهاية العرض'} :</div>
       <div className='flex gap-2 rtl:flex-row-reverse rtl:justify-end mt-2'>
         <TimeBox value={String(timeLeft.day).padStart(2, '0')} label='يوم' />

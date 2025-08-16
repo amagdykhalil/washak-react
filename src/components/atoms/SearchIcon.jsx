@@ -1,10 +1,10 @@
 import { Search, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { baseImage, BaseUrl, useApiGet } from '../../config/Api';
+import { baseImage, useApiGet } from '../../config/Api';
 import Img from './Image';
 import { Link } from 'react-router-dom';
-// hooks/useDebounce.js
- 
+import { useDebounce } from '../../hooks/useDebounce';
+
 export default function SearchIcon() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -70,18 +70,3 @@ export default function SearchIcon() {
 
 
 
-  function useDebounce(value, delay) {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
-}

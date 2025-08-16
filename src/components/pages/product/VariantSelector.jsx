@@ -1,15 +1,37 @@
 import { ChevronDown, Check, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion'; // Import motion from framer-motion
+import { useDebounce } from '../../../hooks/useDebounce';
 
-export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, setValue, showValidation, setShowValidation }) => {
+export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, setValue, showValidation, setShowValidation, defaultCvariantCombinations = [] }) => {
   const [openSelectId, setOpenSelectId] = useState(null);
   const [touchedVariants, setTouchedVariants] = useState({});
+  const defaultSet = new Set(defaultCvariantCombinations);
+
 
   useEffect(() => {
     variants?.forEach(variant => {
-      if (variant.options?.length > 0 && !getValues('options')?.some(opt => opt.startsWith(`${variant.id}_`))) {
-        handleVariantSelect(variant.id, variant.options[0].id, variant.options[0].variant_option_name, false);
+      const validOptions = variant.options || [];
+
+      if (validOptions.length > 0) {
+        // Try to find an option that matches the default combination
+        const matched = validOptions.find((opt) => {
+          return defaultSet.has(opt.id)
+        }
+        );
+
+
+        const selected = matched || validOptions[0];
+
+        if (selected) {
+          handleVariantSelect(
+            variant.id,
+            selected.id,
+            selected.variant_option_name,
+            false
+          );
+        }
+
       }
     });
   }, [variants]);
@@ -18,11 +40,11 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
     const currentOptions = getValues('options') || [];
     const newOptions = currentOptions.filter(opt => !opt.startsWith(`${variantId}_`));
 
-    if (optionId) {
+    if (optionId !== null && optionId !== undefined && optionId !== '') {
       newOptions.push(`${variantId}_${optionId}`);
     }
 
-    setValue('options', newOptions, { shouldValidate: true });
+    setValue('options', newOptions);
     setShowValidation(false);
 
     if (userAction) {
@@ -44,7 +66,7 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
           ${selectedOptionId ? 'border-[#0B649F1A] bg-[#123770] text-white ' : 'border-[#EFF2F4] text-[#637381] hover:bg-[#0B649F1A] '} 
           ${touchedVariants[variant.id] ? 'ring-2 ring-indigo-100' : ''}`}
           onClick={() => setOpenSelectId(openSelectId === variant.id ? null : variant.id)}>
-          <span className='truncate font-medium'>{selectedOptionName || `Select ${variant.variant_name}`}</span>
+          <span className='truncate font-medium'>{selectedOptionName || `إختار ${variant.variant_name}`}</span>
 
           {/* Rotate arrow with ease */}
           <motion.div className={`text-white`} initial={{ rotate: 0 }} animate={{ rotate: openSelectId === variant.id ? 180 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 25 }}>
@@ -117,19 +139,42 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
     );
   };
 
+
   const TextAreaOption = ({ variant }) => {
     const currentOptions = getValues('options') || [];
     const currentValue = currentOptions.find(opt => opt.startsWith(`${variant.id}_`))?.split('_')[1] || '';
+    // Local state for live typing
+    const [textInput, setTextInput] = useState(currentValue);
+    // Debounced value
+    // Handle live typing
+    const handleTextChange = (value) => {
+      setTextInput(value);
+    };
+
+    const handleBlur = () => {
+      handleVariantSelect(variant.id, textInput);
+    };
 
     return (
       <div className={`relative transition-all duration-200 ${touchedVariants[variant.id] ? '' : ''}`}>
-        <textarea className='ring-1 ring-indigo-100 w-full outline-none p-3.5 border-[1px] border-gray-100 rounded-lg focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all duration-200' placeholder={`Enter ${variant.variant_name}`} value={currentValue} onChange={e => handleVariantSelect(variant.id, null, e.target.value)} />
-        {touchedVariants[variant.id] && currentValue && <div className='absolute -top-2 right-3 bg-white px-2 text-xs text-indigo-600 font-medium'>{variant.variant_name}</div>}
+        <textarea
+          className='ring-1 ring-indigo-100 w-full outline-none p-3.5 border-[1px] border-gray-100 rounded-lg focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all duration-200'
+          placeholder={`أدخل ${variant.variant_name}`}
+          value={textInput}
+          onChange={e => handleTextChange(e.target.value)}
+          onBlur={handleBlur}
+        />
+        {touchedVariants[variant.id] && textInput && (
+          <div className='absolute -top-2 right-3 bg-white px-2 text-xs text-indigo-600 font-medium'>
+            {variant.variant_name}
+          </div>
+        )}
       </div>
     );
   };
 
-  const renderVariantOptions = variant => {
+
+  const VariantOptions = ({ variant }) => {
     switch (variant.type) {
       case 1:
         return <CustomSelect variant={variant} />;
@@ -151,8 +196,8 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
         );
       case 4:
         return <CustomRadio variant={variant} />;
-      case 7:
-        return <TextAreaOption variant={variant} />;
+      // case 7:
+      //   return <TextAreaOption variant={variant} />;
       default:
         return (
           <div className='flex flex-wrap gap-2'>
@@ -175,15 +220,20 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
                 {Boolean(variant.is_required) && <span className='text-lg text-rose-500 font-medium'>*</span>}
               </div>
 
-              <div className='transition-all duration-200'>{renderVariantOptions(variant)}</div>
+              <div className='transition-all duration-200'><VariantOptions variant={variant} /></div>
             </div>
 
-            {showValidation && variant.is_required && !getValues('options')?.some(opt => opt.startsWith(`${variant.id}_`)) && (
+            {showValidation && variant.is_required && !getValues('options')?.some(opt => opt.startsWith(`${variant.id}_`)) ? (
               <div className='flex items-center gap-2 text-rose-500 text-sm font-medium animate-pulse'>
                 <AlertCircle className='h-4 w-4' />
-                <span>Please select {variant.variant_name}</span>
+                <span>
+                  {variant.type === 7
+                    ? `يرجى إدخال ${variant.variant_name}`
+                    : `يرجى اختيار ${variant.variant_name}`}
+                </span>
+
               </div>
-            )}
+            ) : ""}
           </div>
         ))}
       </div>

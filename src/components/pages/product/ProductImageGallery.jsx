@@ -1,8 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import Img from '../../atoms/Image';
 import { Maximize2 } from 'lucide-react';
+import { ImageModal } from './ImageModal';
+import { useState } from 'react';
+import { baseImage } from '../../../config/Api';
 
-export const ProductImageGallery = ({ images, selectedImage, setSelectedImage, setIsModalOpen, product }) => {
+export const ProductImageGallery = ({ product }) => {
+  const images = product?.medias?.map(media => baseImage + media.url) || [];
+  const [selectedImage, setSelectedImage] = useState(images?.[0]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const imageVariants = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
@@ -26,7 +33,7 @@ export const ProductImageGallery = ({ images, selectedImage, setSelectedImage, s
         {/* Main Image */}
         <div className='max-sm:order-[-1] relative border border-[#eee] rounded-md overflow-hidden max-xl:h-auto h-[550px] w-full'>
           <motion.div key={selectedImage} initial='hidden' animate='visible' exit='exit' variants={imageVariants}>
-            <Img src={selectedImage} className='object-fill shadow-inner bg-gray-50 h-full w-full' alt={product?.title} id='mainImage' />
+            <Img id={`mainImage-${product.id}`} src={selectedImage} className='object-fill shadow-inner bg-gray-50 h-full w-full' alt={product?.title} />
           </motion.div>
 
           <motion.button onClick={() => setIsModalOpen(true)} className='border border-white p-2 absolute left-[10px] bottom-[10px] cursor-pointer rounded-md' aria-label='Zoom image' variants={zoomButtonVariants} whileHover='hover' whileTap='tap'>
@@ -45,6 +52,7 @@ export const ProductImageGallery = ({ images, selectedImage, setSelectedImage, s
           </div>
         </div>
       </div>
+      <ImageModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} selectedImage={selectedImage} product={product} />
     </div>
   );
 };

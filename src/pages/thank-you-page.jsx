@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import Breadcrumb from '../../components/atoms/Breadcrumb';
-import Button from '../../components/atoms/Button';
-import Title from '../../components/atoms/Title';
-import FeatureList from '../../components/molecules/FeatureList';
+import Breadcrumb from '../components/atoms/Breadcrumb';
+import Button from '../components/atoms/Button';
+import Title from '../components/atoms/Title';
+import FeatureList from '../components/molecules/FeatureList';
 import { useState, useEffect } from 'react';
 import Lottie from 'lottie-react';
-import thankyouAnimation from '../../lottie/Success Check.json';
-import { baseImage } from '../../config/Api';
+import thankyouAnimation from '../lottie/Success Check.json';
+import { baseImage } from '../config/Api';
 
 
 
@@ -40,7 +40,7 @@ export default function ThankYouPage() {
   // Extract data from order
   const { cart, orderSummary, res, productData } = orderData;
   const isCartPurchase = !!cart;
-  
+
   // For single product purchase
   const product = productData?.data?.product;
   const variants = productData?.data?.product_variants;
@@ -56,7 +56,7 @@ export default function ThankYouPage() {
   };
 
   // Calculate total quantity for cart
-  const totalCartQuantity = isCartPurchase 
+  const totalCartQuantity = isCartPurchase
     ? cart.details.reduce((sum, item) => sum + item.quantity, 0)
     : orderSummary.qty;
 
@@ -82,7 +82,7 @@ export default function ThankYouPage() {
             <div className='rounded-lg border border-[var(--border-bg)] text-center space-y-2 bg-white min-h-[40vh] flex items-center justify-center flex-col gap-[10px] mb-[20px]' data-aos='fade-up' data-aos-delay='100'>
               <h2 className='text-2xl max-md:text-xl text-[#404145] font-semibold'>
                 تم إتمام طلبك <span className='text-[var(--second)]'>بنجاح !</span>
-              </h2> 
+              </h2>
               <p className='text-base text-[#768497] max-w-[320px] w-full' data-aos='fade-up' data-aos-delay='200'>
                 تم استلام طلبك و سنتواصل معك في أقرب فرصة. يرجى الانتظار لحين تلقي مكالمتنا.
               </p>
@@ -101,10 +101,10 @@ export default function ThankYouPage() {
                       const productVariants = cartProduct?.product_variants || [];
                       return (
                         <div key={index} className='flex items-center mt-4 max-md:gap-[10px] gap-[30px]' data-aos='fade-right' data-aos-delay={300 + (index * 100)}>
-                          <img 
-                            src={baseImage + cartProduct?.medias?.[0]?.url || '/placeholder-product.jpg'} 
-                            alt={cartProduct?.title} 
-                            className='w-[88px] max-md:w-[60px] max-md:h-[45px] h-[60px] rounded-md object-cover' 
+                          <img
+                            src={baseImage + cartProduct?.medias?.[0]?.url || '/placeholder-product.jpg'}
+                            alt={cartProduct?.title}
+                            className='w-[88px] max-md:w-[60px] max-md:h-[45px] h-[60px] rounded-md object-cover'
                           />
                           <div className='flex-1 max-sm:flex-col max-sm:items-start flex items-center justify-between text-sm'>
                             <div className="flex-1 space-y-2">
@@ -113,7 +113,7 @@ export default function ThankYouPage() {
                               {/* Display selected variants */}
                               {item.options?.map((opt, i) => (
                                 <p key={i} className='text-sm inline-block mx-1 text-gray-500'>
-                                  {getOptionName(productVariants, opt)} 
+                                  {getOptionName(productVariants, opt)}
                                 </p>
                               ))}
                             </div>
@@ -134,7 +134,7 @@ export default function ThankYouPage() {
                           {/* Display selected variants */}
                           {selectedOptions.map((opt, i) => (
                             <p key={i} className='text-sm inline-block mx-1 text-gray-500'>
-                              {getOptionName(variants, opt)} 
+                              {getOptionName(variants, opt)}
                             </p>
                           ))}
                         </div>

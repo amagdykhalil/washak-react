@@ -1,11 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
-import { useAppContext } from '../../AppContext';
+import { useAppContext } from '../../contexts/AppContext';
+
 
 export default function PriceCurrency({ cn = '', price }) {
-  const {storeOptions :{data : {currency : {value } }}  } = useAppContext()
+  const { storeOptions: { currency: { value } } } = useAppContext()
 
-   if (price == null) return null;
+  if (price == null) return null;
 
   const formattedPrice = Number(price).toFixed(2);
 
@@ -25,16 +26,14 @@ export default function PriceCurrency({ cn = '', price }) {
 }
 
 
-export function PriceBlock({ ar=true ,salePrice, originalPrice, className = '', size = 'md' }) {
-   const {
+export function PriceBlock({ ar = true, salePrice, originalPrice, className = '', size = 'md' }) {
+  const {
     storeOptions: {
-      data: {
-        currency: { value },
-      },
+      currency: { value },
     },
   } = useAppContext();
- 
- 
+
+
   const getFontSize = () => {
     switch (size) {
       case 'sm':
@@ -50,14 +49,14 @@ export function PriceBlock({ ar=true ,salePrice, originalPrice, className = '', 
 
   const extractNumber = (price) => {
     if (!price) return 0;
-     const number = typeof price == "string" ? price?.replace(/[^0-9.-]+/g, '') : price ;
+    const number = typeof price == "string" ? price?.replace(/[^0-9.-]+/g, '') : price;
     return parseFloat(number);
   };
 
 
-   return (
+  return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
-       <span className={`text-[var(--second)] font-medium ${fontSize.current}`}>
+      <span className={`text-[var(--second)] font-medium ${fontSize.current}`}>
         {value?.currency_position === 'left'
           ? `${ar ? value?.currency_icon : value?.currency_name} ${extractNumber(salePrice)}`
           : `${extractNumber(salePrice)} ${ar ? value?.currency_icon : value?.currency_name}`}

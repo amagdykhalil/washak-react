@@ -384,3 +384,84 @@ html {
     background-size: 200% 100%;
   }
   
+  a:has(+ ul li a.active) {
+    color: var(--main);
+  }
+  
+
+  /* Default (no scroll) */
+.main-header .header-bar {
+  max-height: 55px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.main-header .logo {
+  width: 120px;
+  transition: width 0.3s ease;
+}
+
+.main-header .nav-menu {
+  gap: 24px; /* same as gap-6 */
+  transition: gap 0.3s ease;
+}
+
+/* When scrolled */
+.main-header.is-scrolled .header-bar {
+  max-height: 0;
+  overflow: hidden;
+}
+
+.main-header.is-scrolled .logo {
+  width: 160px;
+}
+
+.main-header.is-scrolled .nav-menu {
+  gap: 8px; /* same as gap-2 */
+}
+
+.main-header .mobile-menu {
+  transform: translateX(100%);
+}
+
+/* When open */
+.main-header.menu-open .mobile-menu {
+  transform: translateX(0);
+}
+
+@keyframes arrow-wiggle {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(3px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(3px) rotate(0deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.animate-arrow-wiggle {
+  animation: arrow-wiggle 0.4s ease-in-out;
+}
+
+.footer-item-link:hover > svg.footer-item-icon {
+  color: var(--second) !important;
+}
+
+.footer-item-link:hover > span > .footer-item-line {
+  width: 100% !important;
+}
+
+button:disabled,
+.disabled {
+  pointer-events: none;   /* disable all mouse/hover/click events */
+  opacity: 0.5;           /* make it look faded */
+  transition: opacity 0.2s ease;
+}
