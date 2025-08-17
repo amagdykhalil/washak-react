@@ -14,7 +14,8 @@ function ProductWithKey() {
     return <Product key={id} />;
 }
 
-export function RouterProvider() {
+
+export function AppRoutes() {
 
     return (
         <BrowserRouter>

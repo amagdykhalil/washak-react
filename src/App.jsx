@@ -3,10 +3,8 @@ import 'aos/dist/aos.css';
 import { useEffect, useState } from 'react';
 import Lottie from 'lottie-react';
 import lottieAnimation from './lottie/Cart Glassmorphism.json';
-import { ErrorBoundaryProvider } from './config/providers/ErrorBoundaryProvider';
-import { QueryProvider } from './config/providers/QueryProvider';
+import { AppProviders } from './config/providers/AppProviders';
 import toast, { Toaster, useToasterStore } from 'react-hot-toast';
-import { RouterProvider } from './config/providers/RouterProvider';
 
 function App() {
   useEffect(() => {
@@ -41,23 +39,16 @@ function App() {
     );
   }
 
-
-
-
   return (
-    <ErrorBoundaryProvider>
-      <QueryProvider>
-        <Toaster
-          position="top-center"
-          reverseOrder={false}
-          toastOptions={{
-            maxToasts: 3, // ✅ limit to 3
-          }}
-        />
-
-        <RouterProvider />
-      </QueryProvider>
-    </ErrorBoundaryProvider>
+    <AppProviders>
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          maxToasts: 3, // ✅ limit to 3
+        }}
+      />
+    </AppProviders>
   );
 }
 

@@ -4,7 +4,7 @@ import FeatureList from '../components/molecules/FeatureList';
 import ProductSkeleton from '../components/skeleton/ProductSkeleton';
 import { useEffect, useState, useMemo } from 'react';
 import Breadcrumb from '../components/atoms/Breadcrumb';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import Img from '../components/atoms/Image';
 import { ShoppingCart } from 'lucide-react';
 import EmptyState from '../components/atoms/EmptyState';
@@ -16,12 +16,12 @@ import { useAddToCart } from '../hooks/cart/useAddToCart';
 
 export default function Products() {
   const { handleAddToCart } = useAddToCart();
+  const { id: categoryId } = useParams(); // Get the category ID from URL params
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
   const { data: storedProducts, loading } = useStoreProducts(currentPage);
   const { data: categoriesData, loading: categoriesLoading } = useStoreCategories();
   const [active, setActive] = useState('all');
-  const location = useLocation(); // Get the current location (URL)
   const breadcrumbRoutes = [{ label: 'الرئيسية', href: '/' }, { label: 'جميع المنتجات' }];
   // Update the page in query string
   const setPage = (newPage) => {
@@ -66,14 +66,17 @@ export default function Products() {
   }, [storedProducts])
 
   useEffect(() => {
-    const categorySlug = location.pathname.split('/').pop(); // Get last part of URL
-    if (categorySlug) {
-      const foundCategory = categories.find(cat => cat.slug === categorySlug);
+    if (categoryId) {
+      // Find category by slug (assuming categoryId is the slug)
+      const foundCategory = categories.find(cat => cat.slug === categoryId);
       if (foundCategory) {
         setActive(foundCategory.key);
       }
+    } else {
+      // No category ID in URL, show all products
+      setActive('all');
     }
-  }, [location.pathname, categories]);
+  }, [categoryId, categories]);
 
   const filteredData = active === 'all' ? products : products.filter(p => p.type.includes(active));
 
