@@ -52,6 +52,8 @@ const CART_STORAGE_KEY = "cart";
 //   type DecreaseQtyPayload = {
 //     id: string;
 //   };
+
+//   type ClearCart = null;
   
 //   type Action =
 //     | { type: "ADD_ITEM"; payload: AddItemPayload }
@@ -174,10 +176,14 @@ function initFromStorage() {
         const updated = state.cartItems.map((item) =>
             item.id == id
             ? { ...item, selectedOptions: upsertOption(item.selectedOptions, variantId, optionId) }
-            : it
+            : item
         );
   
         return { cartItems: updated };
+      }
+
+      case "CLEAR_CART": {
+        return { cartItems: [] };
       }
   
       default:
@@ -225,6 +231,7 @@ function initFromStorage() {
       decreaseQty: (payload) => dispatch({ type: "DECREASE_QTY", payload }),
       setSelectedOptions: (payload) => dispatch({ type: "SET_SELECTED_OPTIONS", payload }),
       setSpecificOption: (payload) => dispatch({ type: "SET_SPECIFIC_OPTION", payload }),
+      clearCart: () => dispatch({ type: "CLEAR_CART" }), // 🔥 added here
     };
   
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

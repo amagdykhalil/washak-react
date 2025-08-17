@@ -3,48 +3,52 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion'; // Import motion from framer-motion
 import { useDebounce } from '../../../hooks/useDebounce';
 
-export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, setValue, showValidation, setShowValidation, defaultCvariantCombinations = [] }) => {
+
+export const VariantSelector = ({
+  cn,
+  innerCn,
+  labelCn,
+  variants = [],
+  getValues,
+  isVariantSelected = [],
+  setNewOption,
+  showValidation,
+  setShowValidation,
+  defaultVariantCombinations = [], // e.g. [1549,1552]
+}) => {
   const [openSelectId, setOpenSelectId] = useState(null);
   const [touchedVariants, setTouchedVariants] = useState({});
-  const defaultSet = new Set(defaultCvariantCombinations);
+  const defaultSet = new Set(defaultVariantCombinations);
 
 
+  // set defaults (either from defaultVariantCombinations or first option)
   useEffect(() => {
-    variants?.forEach(variant => {
+    if (!variants?.length) return;
+
+    variants.forEach(variant => {
       const validOptions = variant.options || [];
+      if (validOptions.length === 0) return;
 
-      if (validOptions.length > 0) {
-        // Try to find an option that matches the default combination
-        const matched = validOptions.find((opt) => {
-          return defaultSet.has(opt.id)
-        }
-        );
+      // If already selected for this variant, skip
+      const alreadySelected = isVariantSelected(variant)
+      if (alreadySelected) return;
 
+      // Try to find a default match
+      const matched = validOptions.find(opt => defaultSet.has(opt.id));
+      const selected = matched || validOptions[0];
 
-        const selected = matched || validOptions[0];
-
-        if (selected) {
-          handleVariantSelect(
-            variant.id,
-            selected.id,
-            selected.variant_option_name,
-            false
-          );
-        }
-
+      if (selected) {
+        handleVariantSelect(variant.id, selected.id, false);
       }
     });
-  }, [variants]);
+  }, [variants, defaultVariantCombinations]);
 
   const handleVariantSelect = (variantId, optionId, userAction = true) => {
-    const currentOptions = getValues('options') || [];
-    const newOptions = currentOptions.filter(opt => !opt.startsWith(`${variantId}_`));
 
     if (optionId !== null && optionId !== undefined && optionId !== '') {
-      newOptions.push(`${variantId}_${optionId}`);
+      setNewOption(variantId, optionId);
     }
 
-    setValue('options', newOptions);
     setShowValidation(false);
 
     if (userAction) {
@@ -52,8 +56,9 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
     }
   };
 
+
   const CustomSelect = ({ variant }) => {
-    const currentOptions = getValues('options') || [];
+    const currentOptions = getValues() || [];
     const selectedOption = currentOptions.find(opt => opt.startsWith(`${variant.id}_`));
     const selectedOptionId = selectedOption ? selectedOption.split('_')[1] : null;
     const selectedOptionName = variant.options.find(opt => opt.id == selectedOptionId)?.variant_option_name;
@@ -105,7 +110,7 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
   };
 
   const CustomRadio = ({ variant }) => {
-    const currentOptions = getValues('options') || [];
+    const currentOptions = getValues() || [];
     return (
       <div className='flex flex-wrap gap-2'>
         {variant.options.map(option => {
@@ -122,7 +127,7 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
   };
 
   const TextualButtonOption = ({ variant, option }) => {
-    const isSelected = getValues('options')?.includes(`${variant.id}_${option.id}`);
+    const isSelected = getValues()?.includes(`${variant.id}_${option.id}`);
     return (
       <button key={option.id} onClick={() => handleVariantSelect(variant.id, option.id, option.variant_option_name)} className={`px-3 py-2 text-[14px] rounded-lg transition-all duration-200 font-medium border ${isSelected ? 'bg-[#123770] border-[#F1E5E538] text-white ' : 'bg-[#F8FAFB] border-[#F0F1F1] text-[#3F3E3F4D] hover:text-[#123770] hover:border-[#F1E5E538]  hover:bg-[#0B649F1A]'} ${touchedVariants[variant.id] ? 'ring-1 ring-indigo-100' : ''}`}>
         {option.variant_option_name}
@@ -131,7 +136,7 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
   };
 
   const ColorButtonOption = ({ variant, option }) => {
-    const isSelected = getValues('options')?.includes(`${variant.id}_${option.id}`);
+    const isSelected = getValues()?.includes(`${variant.id}_${option.id}`);
     return (
       <div key={option.id} onClick={() => handleVariantSelect(variant.id, option.id, option.variant_option_name)} className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 ${isSelected ? 'ring-2 ring-offset-2 ring-[#F1E5E538] scale-[1.1]' : 'ring-1 ring-[#F0F1F1] hover:ring-[#123770] hover:scale-[0.9] '} duration-500 `} style={{ backgroundColor: option.preview || '#ccc' }} title={option.variant_option_name}>
         {isSelected && <Check className='h-4 w-4 text-white' strokeWidth={3} />}
@@ -141,7 +146,7 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
 
 
   const TextAreaOption = ({ variant }) => {
-    const currentOptions = getValues('options') || [];
+    const currentOptions = getValues() || [];
     const currentValue = currentOptions.find(opt => opt.startsWith(`${variant.id}_`))?.split('_')[1] || '';
     // Local state for live typing
     const [textInput, setTextInput] = useState(currentValue);
@@ -223,7 +228,7 @@ export const VariantSelector = ({ cn, innerCn, labelCn, variants, getValues, set
               <div className='transition-all duration-200'><VariantOptions variant={variant} /></div>
             </div>
 
-            {showValidation && variant.is_required && !getValues('options')?.some(opt => opt.startsWith(`${variant.id}_`)) ? (
+            {showValidation && variant.is_required && !getValues()?.some(opt => opt.startsWith(`${variant.id}_`)) ? (
               <div className='flex items-center gap-2 text-rose-500 text-sm font-medium animate-pulse'>
                 <AlertCircle className='h-4 w-4' />
                 <span>

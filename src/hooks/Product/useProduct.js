@@ -51,11 +51,13 @@ export const useProduct = () => {
     }, [product?.id]);
     const quantity = watch('qty');
     const options = watch('options');
-
+    console.log("watched options", options)
     const modifiedOptions = useMemo(
       () => options?.map(opt => opt.split('_')[1]) ?? [],
       [options]
     );
+
+    console.log("watched modifiedOptions", modifiedOptions)
     const { data, loading:loadingLiveVariantPrice } = useVariantCombinations(product?.id, modifiedOptions)
     // Normalize the top match
     const variant = data?.data?.[0] ?? null;
@@ -109,7 +111,10 @@ export const useProduct = () => {
       try {
   
         const res = await api.post(`/submit-quick-checkout`, orderSummary);
-        sessionStorage.setItem('checkout_data', JSON.stringify({ orderSummary, res: res.data.data, productData }));
+        sessionStorage.setItem('checkout_data', JSON.stringify({
+           currency:storeOptions?.currency.value.currency_name,
+           orderSummary, res: res.data.data, productData 
+          }));
   
   
         navigate('/thank-you-page');

@@ -21,16 +21,17 @@ export default function ThankYouPage() {
     },
   ];
 
-  const [orderData, setOrderData] = useState(null);
+  const [orderData, setOrderData] = useState(() => {
+    const stored = sessionStorage.getItem("checkout_data");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [showAnimation, setShowAnimation] = useState(true);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const stored = sessionStorage.getItem('checkout_data');
-    if (stored) {
-      setOrderData(JSON.parse(stored));
-    } else {
+    if (!stored) {
       navigate('/');
     }
   }, []);
@@ -38,7 +39,7 @@ export default function ThankYouPage() {
   if (!orderData) return null;
 
   // Extract data from order
-  const { cart, orderSummary, res, productData } = orderData;
+  const { cart, orderSummary, res, productData, currency } = orderData;
   const isCartPurchase = !!cart;
 
   // For single product purchase
@@ -60,10 +61,16 @@ export default function ThankYouPage() {
     ? cart.details.reduce((sum, item) => sum + item.quantity, 0)
     : orderSummary.qty;
 
-  // Calculate total price for cart
-  const totalCartPrice = isCartPurchase
-    ? cart.details.reduce((sum, item) => sum + item.total_price, 0)
-    : res.total;
+  const cartLength = isCartPurchase
+    ? cart.details.length
+    : 1;
+
+
+  const subTotal = cart?.subtotal;
+  const shipping = cart?.shipping;
+  const tax = cart?.tax;
+  const totals = isCartPurchase ? cart.total : res.total;
+
 
   return (
     <div className='bg-[#f8fafb]'>
@@ -118,7 +125,7 @@ export default function ThankYouPage() {
                               ))}
                             </div>
                             <p className='text-base text-[#123770] text-nowrap'>
-                              {item.total_price} {res?.currency}
+                              {item.total_price.toFixed(2)} {currency}
                             </p>
                           </div>
                         </div>
@@ -139,7 +146,7 @@ export default function ThankYouPage() {
                           ))}
                         </div>
                         <p className='text-base text-[#123770] text-nowrap'>
-                          {res.total} {res.currency}
+                          {res.total.toFixed(2)} {res.currency}
                         </p>
                       </div>
                     </div>
@@ -151,20 +158,20 @@ export default function ThankYouPage() {
                   <div className='bg-white border border-[var(--border-bg)] p-4 rounded-lg space-y-2' data-aos='fade-right' data-aos-delay='400'>
                     <Title cn='border-b !mb-[20px] border-b-[var(--border-bg)] pb-2' title1='بيانات ' title2='التوصيل' />
 
-                    <div className='text-base text-[#838BA1] flex justify-between' data-aos='fade-right' data-aos-delay='450'>
+                    {orderSummary.name && <div className='text-base text-[#838BA1] flex justify-between' data-aos='fade-right' data-aos-delay='450'>
                       <span>اسم العميل</span>
                       <span className='text-[#A6AFB9] text-sm'>{orderSummary.name}</span>
-                    </div>
+                    </div>}
 
-                    <div className='text-base text-[#838BA1] flex justify-between' data-aos='fade-right' data-aos-delay='500'>
+                    {orderSummary.phone && <div className='text-base text-[#838BA1] flex justify-between' data-aos='fade-right' data-aos-delay='500'>
                       <span>رقم الجوال</span>
                       <span className='text-[#A6AFB9] text-sm'>{orderSummary.phone}</span>
-                    </div>
+                    </div>}
 
-                    <div className='text-base text-[#838BA1] flex justify-between' data-aos='fade-right' data-aos-delay='550'>
+                    {orderSummary.delivery_address && <div className='text-base text-[#838BA1] flex justify-between' data-aos='fade-right' data-aos-delay='550'>
                       <span>العنوان</span>
                       <span className='text-[#A6AFB9] text-sm'>{orderSummary.delivery_address}</span>
-                    </div>
+                    </div>}
 
                     {orderSummary.zip_code && (
                       <div className='text-base text-[#838BA1] flex justify-between' data-aos='fade-right' data-aos-delay='600'>
@@ -187,27 +194,44 @@ export default function ThankYouPage() {
 
                 <div className='!mt-[20px] text-base text-[#838BA1] flex justify-between' data-aos='fade-left' data-aos-delay='350'>
                   <span>عدد المنتجات</span>
-                  <span className='text-[var(--second)] text-sm'>{totalCartQuantity} منتج</span>
+                  <span className='text-[var(--second)] text-sm'>{cartLength} منتج</span>
                 </div>
 
                 <div className='!mt-[20px] text-base text-[#838BA1] flex justify-between' data-aos='fade-left' data-aos-delay='400'>
                   <span>اجمالى المنتجات</span>
                   <span className='text-[var(--main)] text-sm'>
-                    {totalCartPrice} {res?.currency}
+                    {totalCartQuantity} قطع
                   </span>
                 </div>
 
-                <div className='!mt-[20px] text-base text-[#838BA1] flex justify-between' data-aos='fade-left' data-aos-delay='450'>
+                {isCartPurchase && <div className='!mt-[20px] text-base text-[#838BA1] flex justify-between' data-aos='fade-left' data-aos-delay='450'>
                   <span>المبلغ المستحق</span>
                   <span className='text-[var(--main)] text-sm'>
-                    {totalCartPrice} {res?.currency}
+                    {subTotal.toFixed(2)} {currency}
                   </span>
-                </div>
+                </div>}
+
+
+                {isCartPurchase && <div className='!mt-[20px] text-base text-[#838BA1] flex justify-between' data-aos='fade-left' data-aos-delay='500'>
+                  <span>الضريبة</span>
+                  <span className='text-[var(--second)] text-sm'>
+                    {tax.toFixed(2)} {currency}
+                  </span>
+                </div>}
+
+
+                {isCartPurchase && <div className='!mt-[20px] text-base text-[#838BA1] flex justify-between' data-aos='fade-left' data-aos-delay='500'>
+                  <span>تكلفة الشحن</span>
+                  <span className='text-[var(--second)] text-sm'>
+                    {shipping.toFixed(2)} {currency}
+                  </span>
+                </div>}
+
 
                 <div className='!mt-[20px] text-base text-[#838BA1] flex justify-between' data-aos='fade-left' data-aos-delay='500'>
                   <span>المبلغ الاجمالى</span>
                   <span className='text-[var(--second)] text-sm'>
-                    {totalCartPrice} {res?.currency}
+                    {totals.toFixed(2)} {currency}
                   </span>
                 </div>
               </div>
@@ -220,3 +244,4 @@ export default function ThankYouPage() {
     </div>
   );
 }
+

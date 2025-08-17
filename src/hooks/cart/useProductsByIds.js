@@ -3,7 +3,7 @@ import { BaseFetch } from "../../config/Api";
 import { useQuery } from "@tanstack/react-query";
 
 export default function useProductsByIds(ids = [], { onSuccess } = {}) {
-    const key = useMemo(() => ['productsByIds', ids.filter(Boolean).sort()], [ids]);
+    const key = useMemo(() => ['productsByIds']);
   
     const query = useQuery({
       queryKey: key,

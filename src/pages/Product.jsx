@@ -110,9 +110,35 @@ export default function Product() {
             comparePrice={variant?.compare_at_price}
             quantity={quantity}
           />
-          <VariantSelector variants={product_variants} getValues={getValues} setValue={setValue} showValidation={showValidation} setShowValidation={setShowValidation} defaultCvariantCombinations={defaultVariantCombination} />
+          <VariantSelector
+            key={product.id}
+            variants={product_variants}
+            isVariantSelected={(variant) => {
+              const selectedOptions = getValues('options');
+              return selectedOptions.some(opt => opt.startsWith(`${variant.id}_`));
+            }
+            }
+            setNewOption={(variantId, optionId) => {
+              const selectedOptions = getValues('options') || [];
+              // Remove any existing option for this variant
+              const newOptions = selectedOptions.filter(opt => !opt.startsWith(`${variantId}_`));
+              console.log("newOptions", newOptions)
+              // Add the new one if valid
+              if (optionId !== null && optionId !== undefined && optionId !== '') {
+                newOptions.push(`${variantId}_${optionId}`);
+              }
+
+              setValue('options', newOptions, { shouldValidate: false });
+            }}
+            getValues={() => {
+              return getValues('options') || [];
+            }}
+            showValidation={showValidation}
+            setShowValidation={setShowValidation}
+            defaultCvariantCombinations={defaultVariantCombination}
+          />
           <StockInfo stock={product?.stock} options={productOptions} />
-          {isQuickCheckout ? <CheckoutForm checkoutFields={checkoutFields} register={register} errors={errors} /> : null}
+          {isQuickCheckout ? <CheckoutForm checkoutFields={checkoutFields} register={register} errors={errors} className='!mt-8' /> : null}
           <BuyNowSection showValidation={showValidation} isBuyNowLoading={isBuyNowLoading} handleBuyNow={handleBuyNow} getValues={getValues} setValue={setValue} isSticky={productOptions?.product_footer_buy_sticky === '1'} buttonText={productOptions?.buy_now_button_text} />
         </div>
       </div>

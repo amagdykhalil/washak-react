@@ -7,6 +7,7 @@ const Skeleton = ({ width = "w-16", height = "h-4" }) => (
 
 export default function CartTotalSummary({
     subtotal,
+    oldSubtotal,
     discount,
     tax,
     shipping,
@@ -20,7 +21,7 @@ export default function CartTotalSummary({
                 {loadingVariantPrices ? (
                     <Skeleton />
                 ) : (
-                    <span className="text-[var(--main)]">{subtotal.toFixed(2)} ر.س</span>
+                    <span className="text-[var(--main)]">{oldSubtotal.toFixed(2)} ر.س</span>
                 )}
             </div>
 

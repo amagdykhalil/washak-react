@@ -6,7 +6,7 @@ import { api, useApiGet } from "../../config/Api";
 import { useCheckoutSettings } from "../useCheckoutSettings";
 import useProductsByIds from "./useProductsByIds";
 import useVariantQueries from "./useVariantQueries";
-import { Notification } from "../../config/Notification";
+import { useForm } from "react-hook-form";
 
 export const useCart = () => {
   const navigate = useNavigate();
@@ -15,19 +15,32 @@ export const useCart = () => {
   // Cart context should be the single source of truth (provides items and mutation methods)
   const {
     cartItems: contextCartItems = [],
-    setSelectedOptions,
+    setSpecificOption,
     removeItem: removeItemFromContext,
     decreaseQty,
-    increaseQty
+    increaseQty,
+    clearCart
   } = useCartContext();
     // collect product ids from cart
     const productIdsKey = useMemo(
       () => contextCartItems.map(i => i.id).filter(Boolean),
       [contextCartItems]
     );
+    //form
+    const {
+      register,
+      formState: { errors },
+      trigger,
+      getValues
+    } = useForm();
     // use the hook
-    const { data: products, isLoading: loading } = useProductsByIds(productIdsKey);
+    const { data: products, isLoading: loading, refetch } = useProductsByIds(productIdsKey);
+    // force refetch when ids change
+    useEffect(() => {
+      console.log(productIdsKey)
 
+      if (productIdsKey.length > 0) refetch();
+    }, [productIdsKey?.join(",")]);
     // local UI state kept here
     const [submitError, setSubmitError] = useState(null);
     const [isBuyNowLoading, setIsBuyNowLoading] = useState(false);
@@ -91,6 +104,7 @@ export const useCart = () => {
   
   // Totals are memoized to avoid unnecessary recomputations in render
   const totals = useMemo(() => {
+    let oldSubtotal = 0;
     let subtotal = 0;
     let discount = 0;
     let shipping = 0; // still exposed to caller to set if needed
@@ -99,6 +113,9 @@ export const useCart = () => {
     contextCartItems.forEach(item => {
       const product = products.find(p => p.id === item.id);
       if (!product) return;
+
+      // let price = product.price?.special_price ?? product.price?.price ?? 0;
+      // let regularPrice = product.price?.regular_price ?? price;
 
       let price = 0;
       let regularPrice = 0;
@@ -111,12 +128,13 @@ export const useCart = () => {
         regularPrice = product.price?.regular_price ?? price;
       }
 
+      oldSubtotal += regularPrice * (item.quantity || 1);
       subtotal += price * (item.quantity || 1);
       if (regularPrice > price) discount += (regularPrice - price) * (item.quantity || 1);
     });
 
     const total = subtotal + shipping + tax;
-    return { subtotal, discount, shipping, tax, total };
+    return { subtotal, discount, shipping, tax, total, oldSubtotal };
   }, [contextCartItems, products, variantPrices]);
 
 
@@ -125,31 +143,37 @@ export const useCart = () => {
       removeItemFromContext(id);
     }, [removeItemFromContext]);
 
-    const handleVariantSelection = useCallback((productId, options = []) => {
-      
+    const handleVariantSelection = useCallback((productId, variantId, optionId) => {
       // Update selection in cart context
-      setSelectedOptions({id:productId,  selectedOptions: options });
-    }, [setSelectedOptions, products]);
+      setSpecificOption({id:productId, variantId, optionId  });
+    }, [setSpecificOption, products]);
 
      // validate required variants before checkout
-  const validateVariants = useCallback(() => {
-    let isValid = true;
-    contextCartItems.forEach(item => {
-      const product = products.find(p => p.id === item.id);
-      if (product?.product_variants?.length > 0) {
-        const required = product.product_variants.filter(v => v.is_required);
-        required.forEach(v => {
-          const has = item.selectedOptions?.some(opt => opt.startsWith(`${v.id}_`));
-          if (!has) isValid = false;
-        });
+     const validateVariants = useCallback(() => {
+      for (const item of contextCartItems) {
+        const product = products.find(p => p.id === item.id);
+        if (product?.product_variants?.length > 0) {
+          const required = product.product_variants.filter(v => v.is_required);
+          for (const v of required) {
+            const has = item.selectedOptions?.some(opt => opt.startsWith(`${v.id}_`));
+            if (!has) {
+              return false; // ❌ invalid → return immediately
+            }
+          }
+        }
       }
-    });
-    return isValid;
-  }, [contextCartItems, products]);
+      return true; // ✅ all valid
+    }, [contextCartItems, products]);
+    
 
   // handleCheckout: returns the API response (caller can navigate or handle success)
-  const handleCheckout = useCallback(async (data, { skipVariantValidation = false } = {}) => {
+  
+
+  const handleCheckout = useCallback(async ({ skipVariantValidation = false } = {}) => {
     setSubmitError(null);
+
+    const isValid = await trigger();
+      if (!isValid) return;
 
     // basic validation
     if (!skipVariantValidation && !validateVariants()) {
@@ -157,10 +181,16 @@ export const useCart = () => {
       throw new Error('variants_validation_failed');
     }
 
+    // manually collect all form values
+    const data = getValues();
+
     setIsBuyNowLoading(true);
     try {
       const checkoutItems = contextCartItems.map(item => {
         const product = products.find(p => p.id === item.id) || {};
+
+        // let price = product.price?.special_price ?? product.price?.price ?? 0;;//always get price from product because variant Prices endpoint return it with value that submit-checkout endpoint refuse.
+        // let regularPrice = product.price?.regular_price ?? price;//always get regular price (old price) from product because variant Prices endpoint return it with value that submit-checkout endpoint refuse.
         let price = 0;
         let regularPrice = 0;
 
@@ -195,38 +225,29 @@ export const useCart = () => {
           weight: 0,
         },
         customer_info: {
-          name: data.name || '.',
-          first_name: data.first_name || '.',
-          last_name: data.last_name || '.',
-          email: data.email || '',
-          phone: data.phone || '',
-          delivery_address: data.delivery_address || '',
-          city: data.city || '',
-          country: data.country || '',
-          zip_code: data.zip_code || '',
-          comment: data.comment || '',
+          ...data
         },
         payment_method: data.payment_method || 2,
-        currency_name: storeOptions?.data?.currency.value.currency_name || '',
+        currency_name: storeOptions?.currency.value.currency_name,
         user_ip: data.user_ip || '127.0.0.1',
       };
 
       const response = await api.post('/submit-checkout', checkoutData);
-
       // store checkout payload for other pages (keep parity with previous behavior)
       try {
-        sessionStorage.setItem('checkout_data', JSON.stringify({ cart: { details: checkoutItems, products }, orderSummary: "", res: "", productData: "" }));
+        sessionStorage.setItem('checkout_data', JSON.stringify({ currency:checkoutData.currency_name, cart: { ...totals,details: checkoutItems, products }, orderSummary: "", res: "", productData: "" }));
       } catch (e) {
         // ignore storage errors
       }
 
-      if (response.data?.status_code === 200) {
-        // allow caller to decide whether to clear cart / navigate
-        return response.data;
+      if (response?.data?.status_code === 200) {
+        clearCart()
+        navigate('/thank-you-page');
+        return response?.data;
       }
 
-      setSubmitError(response.data?.message || 'حدث خطأ أثناء إتمام الطلب');
-      return response.data;
+      setSubmitError(response?.data?.message || 'حدث خطأ أثناء إتمام الطلب');
+      return response?.data;
     } catch (err) {
       console.error('Checkout error', err);
       const errorMessage = err?.response?.data?.message || err?.response?.data?.error || 'حدث خطأ أثناء إتمام الطلب. الرجاء المحاولة مرة أخرى';
@@ -237,38 +258,8 @@ export const useCart = () => {
     }
   }, [contextCartItems, products, variantPrices, totals, validateVariants, storeOptions]);
 
-  // ✅ Prevent increase over stock
-const increaseQuantity = useCallback(
-  ({id}) => {
-    const product = products.find(p => p.id === id);
-    if (!product) return;
-    
-    // check if variant-specific inventory exists
-    const variantStock = variantPrices[id]?.inventory ?? null;
-    const baseStock = product?.stock?.stock_qty ?? null;
-    
 
-    // current item in cart
-    const cartItem = contextCartItems.find(c => c.id === id);
-    const currentQty = cartItem?.quantity || 0;
-
-    // decide which stock to use (prefer variant stock if available)
-    const availableStock = variantStock ?? baseStock;
-    
-    if (availableStock != null && currentQty >= availableStock) {
-      // 🚫 Prevent going beyond stock
-      Notification(
-        `عذراً، لا يمكن زيادة الكمية: تبقى فقط ${availableStock} قطعة في المخزون للمنتج "${product.title}"`
-      );
-      
-      return;
-    }
-
-    increaseQty({id});
-  },
-  [contextCartItems, products, variantPrices, increaseQty]
-);
-
+  
   // expose everything the component previously used, but now wired to CartContext and optimized
   return {
     // data
@@ -284,12 +275,14 @@ const increaseQuantity = useCallback(
     submitError,
     isBuyNowLoading,
     checkoutFields,
+    errors,
 
     // actions
     removeItem,
+    register,
     // clearCart,
     decreaseQuantity: decreaseQty,
-    increaseQuantity,
+    increaseQuantity: increaseQty,
     // decreaseQuantity,
     handleVariantSelection,
     handleCheckout,

@@ -1,21 +1,21 @@
 import { motion } from "framer-motion";
 import Title from '../../atoms/Title';
 
-export const CheckoutForm = ({ checkoutFields, register, errors }) => {
+export const CheckoutForm = ({ checkoutFields, register, errors, className }) => {
+  console.log(checkoutFields)
   return (
     <motion.form
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
-      className='space-y-4 !my-8 bg-white rounded-lg overflow-hidden'
+      className={`space-y-4 !mb-8 bg-white rounded-lg overflow-hidden ${className}`}
       data-aos='fade-up'
     >
-      <Title title1='يرجى ادخال معلوماتك ' title2='لإكمال الطلب' />
+      <Title title1='يرجى ادخال معلوماتك ' title2='لإكمال الطلب' cn='!mb-8' />
       {checkoutFields.map(field => {
         if (!field.is_enable) return null;
 
         const hasError = errors[field.backend_field_name];
-
         return (
           <div key={field.id} className='flex flex-col gap-[10px] relative'>
             <FieldLabel field={field} />
@@ -53,31 +53,53 @@ const FieldWrapper = ({ field, children, hasError }) => (
   </div>
 );
 
-const FieldInput = ({ field, register }) => (
-  <input
+const FieldInput = ({ field, register }) => {
+  const isNumber = field.type?.toLowerCase() === "number";
+
+  const validationRules = {
+    required: field.is_required ? `${field.field_text} مطلوب` : false,
+    ...(isNumber && field.min_length && {
+      min: {
+        value: field.min_length,
+        message: `${field.field_text} يجب أن يكون أكبر من أو يساوي ${field.min_length}`,
+      },
+    }),
+    ...(isNumber && field.max_length && {
+      max: {
+        value: field.max_length,
+        message: `${field.field_text} يجب أن يكون أقل من أو يساوي ${field.max_length}`,
+      },
+    }),
+    ...(!isNumber && field.min_length && {
+      minLength: {
+        value: field.min_length,
+        message: `${field.field_text} يجب أن يحتوي على ${field.min_length} أحرف على الأقل`,
+      },
+    }),
+    ...(!isNumber && field.max_length && {
+      maxLength: {
+        value: field.max_length,
+        message: `${field.field_text} يجب ألا يتجاوز ${field.max_length} حرفًا`,
+      },
+    }),
+  };
+
+  return <input
     type={field.type?.toLowerCase() || 'text'}
     id={field.backend_field_name}
-    {...register(field.backend_field_name, {
-      required: field.is_required ? `${field.field_text} مطلوب` : false,
-      ...(field.min_length && {
-        minLength: {
-          value: field.min_length,
-          message: `${field.field_text} يجب أن يحتوي على ${field.min_length} أحرف على الأقل`,
-        },
-      }),
-      ...(field.max_length && {
-        maxLength: {
-          value: field.max_length,
-          message: `${field.field_text} يجب ألا يتجاوز ${field.max_length} `,
-        },
-      }),
+    {...register(field.backend_field_name, validationRules)}
+    {...(isNumber && {
+      min: field.min_length,
+      max: field.max_length,
     })}
-    min={field.min_length ? field.min_length : undefined}
-    max={field.max_length ? field.max_length : undefined}
+    {...(!isNumber && {
+      maxLength: field.max_length,
+      minLength: field.min_length,
+    })}
     placeholder={field.field_placeholder}
     className='placeholder:text-[#A5A5A5] text-[#222] font-normal w-full px-[10px] h-full outline-none'
   />
-);
+};
 
 const FieldTextarea = ({ field, register }) => (
   <textarea

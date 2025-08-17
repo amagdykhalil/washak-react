@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useParams } from "react-router-dom";
 import { AppLayout } from "../../components/molecules/AppLayout";
 import Home from "../../pages/Home";
 import ContactUsPage from "../../pages/ContactUs";
@@ -8,6 +8,11 @@ import Product from "../../pages/Product";
 import DynamicPage from "../../pages/DynamicPage";
 import NotFoundPage from "../../pages/NotFound";
 import ThankYouPage from "../../pages/thank-you-page";
+
+function ProductWithKey() {
+    const { id } = useParams();
+    return <Product key={id} />;
+}
 
 export function RouterProvider() {
 
@@ -23,7 +28,7 @@ export function RouterProvider() {
                     <Route path="/pages/:page" element={<DynamicPage />} />
                     <Route path="/category/:id" element={<Products />} />
                     <Route path="/products" element={<Products />} />
-                    <Route path="/product/:id" element={<Product />} />
+                    <Route path="/product/:id" element={<ProductWithKey />} />
                 </Route>
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
