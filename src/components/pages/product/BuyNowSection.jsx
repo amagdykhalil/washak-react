@@ -57,12 +57,12 @@ export const BuyNowSection = ({
         data-aos="fade-up"
       >
         {showValidation && (
-          <div className="w-full p-3 bg-red-100 text-red-700 rounded-md text-sm text-center ">
+          <div className="w-full p-3 bg-red-100 text-red-700 rounded-md text-sm text-center mt-3">
             يرجى تحديد جميع الخيارات المطلوبة قبل الشراء
           </div>
         )}
 
-        <div className="flex items-center w-full gap-6 ">
+        <div className="flex items-center w-full gap-6 mt-3">
           {/* wrap the Button so we can reliably attach a ref even if Button doesn't forward refs */}
           <div ref={buyBtnWrapperRef} className="w-full">
             <Button

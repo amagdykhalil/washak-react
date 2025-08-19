@@ -110,10 +110,3 @@ export const useApiGet = (url, successMsg, errorMsg) => {
   
     return { data, loading, error };
   };
-
-  //support, shippings, plugins, upsalls
-  // مش المفروض اجيب طرق الدفع عمد الدفع بدل متكون static
-  // هلا أخلي ال thank you page حسب ال endpoint 
-  // ال فونت اخليه dynamic  ولا هيكون مع colors
-  // هل استخدم موافقه ال cookie 
-  // هل contact us enable ليها معنا 

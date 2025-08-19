@@ -17,9 +17,20 @@ export const ImageModal = ({ isModalOpen, setIsModalOpen, selectedImage, product
     {isModalOpen && (
       <motion.div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70' initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
         <motion.div ref={modalContentRef} className='relative w-[90vw] max-w-4xl' initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}>
-          <motion.button onClick={() => setIsModalOpen(false)} className='max-md:w-[30px] max-md:h-[30px] border border-white w-[40px] h-[40px] rounded-sm flex items-center justify-center cursor-pointer absolute top-[20px] right-[20px] hover:scale-[1.05] duration-500 hover:opacity-80' aria-label='Close modal' whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-            <X className='stroke-white' />
+          <motion.button
+            onClick={() => setIsModalOpen(false)}
+            aria-label="إغلاق"
+            className="absolute top-4 right-4 flex items-center justify-center
+             w-10 h-10 md:w-11 md:h-11 rounded-full
+             bg-gray-100 hover:bg-gray-200
+             border border-gray-300 shadow-sm
+             cursor-pointer transition-all duration-100 "
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <X className="w-5 h-5 md:w-6 md:h-6 text-gray-800" strokeWidth={2.5} />
           </motion.button>
+
           <Img src={selectedImage} alt={product?.title} className='w-full h-auto rounded-lg shadow-lg' />
         </motion.div>
       </motion.div>

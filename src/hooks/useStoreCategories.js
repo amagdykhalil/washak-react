@@ -11,6 +11,7 @@ export function useStoreCategories() {
       data: query.data,
       loading: query.isLoading,
       error: query.error,
+      refetch: query.refetch
     };
   }
   

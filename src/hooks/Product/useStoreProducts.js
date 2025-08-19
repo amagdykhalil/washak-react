@@ -11,6 +11,7 @@ export function useStoreProducts(page = 1) {
       data: query.data,
       loading: query.isLoading,
       error: query.error,
+      refetch: query.refetch
     };
   }
   

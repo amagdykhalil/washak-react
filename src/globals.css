@@ -89,7 +89,22 @@ body {
   animation: pulse-notify 1s ease-in-out infinite;
 }
 
+/* .navlink:not(.active) {
+  @apply text-[var(--black-2)] hover:text-[var(--main)]
+} */
 
+.navlink {
+  @apply text-[var(--black-2)] transition-all duration-200;
+}
+
+.navlink.active > span,
+.navlink.active > svg {
+  @apply text-[var(--main)];
+}
+/* Only apply hover on the element itself, not children */
+.navlink:not(.active):where(:hover) {
+  @apply text-[var(--main)];
+}
 
 
 .Numbers{
@@ -353,10 +368,6 @@ html {
   }
   
   
-  
-
-
-
 
   /* Skeleton */
 
@@ -384,9 +395,9 @@ html {
     background-size: 200% 100%;
   }
   
-  a:has(+ ul li a.active) {
+  /* a:has(+ ul li a.active) {
     color: var(--main);
-  }
+  } */
   
 
   /* Default (no scroll) */
@@ -457,6 +468,14 @@ html {
 
 .footer-item-link:hover > span > .footer-item-line {
   width: 100% !important;
+}
+
+.footer-item-link.active > span {
+  @apply font-medium text-white
+}
+
+.footer-item-link.active > span .footer-item-line {
+  @apply w-full
 }
 
 button:disabled,

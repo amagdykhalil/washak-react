@@ -11,6 +11,18 @@ export default function useMenuNavigation(menuItems = [], menuSetting) {
       title: "MAIN MENU"
     });
   
+    // Update currentMenu when menuItems changes
+    useEffect(() => {
+      if (menuItems && menuItems.length > 0) {
+        setCurrentMenu({
+          items: menuItems,
+          title: "MAIN MENU"
+        });
+        // Reset history when menuItems changes
+        historyRef.current = [];
+      }
+    }, [menuItems]);
+
     const isMain = historyRef.current.length === 0;
     const mainPageSlug = historyRef.current.length === 0
       ? ''
@@ -18,45 +30,48 @@ export default function useMenuNavigation(menuItems = [], menuSetting) {
   
     const settings = useJsonParser(menuSetting?.header?.[0]?.settings, 'Failed to parse header settings:');
 
-  
     // Handle window resize and scroll
     useEffect(() => {
       const mainHeader = document.querySelector('.main-header');
   
       const handleScroll = () => {
+        if (!mainHeader) return;
+        
         if (window.scrollY > 0) {
-          mainHeader?.classList.add('is-scrolled');
+          mainHeader.classList.add('is-scrolled');
         } else {
-          mainHeader?.classList.remove('is-scrolled');
+          mainHeader.classList.remove('is-scrolled');
         }
-  
       };
+
       const handleResize = () => {
-        const mobile = window.innerWidth < 1024;
+        const isMobile = window.innerWidth < 1024;
         const navMenu = document.querySelector('.nav-menu');
   
-        if (!mobile && navMenu?.classList.contains('open')) {
+        if (!isMobile && navMenu?.classList.contains('open')) {
           navMenu.classList.remove('open');
         }
-  
-        const isMobile = window.innerWidth < 1024;
   
         if (!isMobile && menuOpen) {
           setMenuOpen(false)
         }
       };
   
+      // Add event listeners
       window.addEventListener('scroll', handleScroll);
       window.addEventListener('resize', handleResize);
+  
+      // Initial call to set correct state
+      handleScroll();
+      handleResize();
   
       // Cleanup
       return () => {
         window.removeEventListener('scroll', handleScroll);
         window.removeEventListener('resize', handleResize);
       };
-    }, []);
-    
-  
+    }, [menuOpen]); // Added menuOpen to dependencies
+
     // Go to submenu
     const goToSubmenu = (index) => {
       historyRef.current.push(index);

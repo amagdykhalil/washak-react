@@ -1,12 +1,14 @@
 import { createContext, useContext, } from 'react';
-import { useApiGet } from '../config/Api';
+import { useMenu } from '../hooks/globalSettings/useMenu';
+import { useMenuSettings } from '../hooks/globalSettings/useMenuSettings';
+import { useStoreOptions } from '../hooks/globalSettings/useStoreOptions';
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
   
-  const { data: menuData = {}, loading: loadingMenu } = useApiGet(`/get-store-menu`);
-  const { data: menuSettingData  = {}, loading: loadingSetting } = useApiGet(`/get-store-menu-settings`);
-  const { data: storeOptionsData = {}, loading: optionsLoading } = useApiGet(`/get-store-options`);
+  const { data: menuData = {}, loading: loadingMenu } = useMenu();
+  const { data: menuSettingData  = {}, loading: loadingSetting } = useMenuSettings();
+  const { data: storeOptionsData = {}, loading: optionsLoading } = useStoreOptions();
 
   const menu = menuData?.data;
   const menuSetting = menuSettingData?.data;

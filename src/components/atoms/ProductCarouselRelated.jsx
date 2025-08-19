@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectSlide } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -11,12 +11,11 @@ import Img from './Image';
 import { PriceBlock } from './PriceCurrency';
 import { ShoppingCart } from 'lucide-react';
 import { useAddToCart } from '../../hooks/cart/useAddToCart';
+import { NotFoundImage } from './NotFoundImage';
+import { getProductImageId } from '../../helper/getProductImageId';
 
 export default function ProductCarouselRelated({ btnName = 'شراء الان', order, btnIcon = '/icons/buy.png', loading, bg, cn, arrowTop, products, title, subTitle, delay = 5000 }) {
-  const { handleAddToCart } = useAddToCart();
-
   const [count, setCount] = useState(4);
-  const router = useNavigate()
   useEffect(() => {
     const updateCount = () => {
       const width = window.innerWidth;
@@ -36,8 +35,8 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
   const config = {
     spaceBetween: 10,
     loop: true,
-    speed: 60000,
-    slideToClickedSlide: true,
+    speed: process.env.REACT_APP_RELATED_SWIPER_SPEED || 4000,
+    slideToClickedSlide: false,
     modules: [Navigation, Autoplay, Pagination],
     navigation: {
       prevEl: '.custom-prev',
@@ -58,23 +57,11 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
     },
   };
 
-  const SkeletonCard = () => (
-    <div className=' animate-pulse flex-1 group shadow-sm border border-[#EEEEEE] bg-white rounded-lg p-3'>
-      <div className='bg-gray-200 h-[230px] rounded mb-4' />
-      <div className='h-3 bg-gray-200 rounded w-1/3 mx-auto mb-2' />
-      <div className='h-4 bg-gray-200 rounded w-1/2 mx-auto mb-4' />
-      <div className='flex justify-center gap-2 mb-4'>
-        <div className='h-4 bg-gray-200 rounded w-1/4' />
-        <div className='h-4 bg-gray-200 rounded w-1/6' />
-      </div>
-      <div className='h-8 bg-gray-200 rounded w-full' />
-    </div>
-  );
-
   const showArrows = products?.length > count;
 
 
   if (products?.length <= 0) return null;
+
   return (
     <div className={` ${!products && ' !hidden'} relative max-sm:!px-[20px]   `} style={{ order: order }}>
       <div className={`container ${cn} `}>
@@ -92,61 +79,12 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
           ) : (
             <>
               <Swiper {...config} className={`!py-[50px] items-stretch ${arrowTop ? '!px-0' : 'md:!px-[5px]'}`}>
-                {products?.map(p => {
-
-                  const discountPercentage =
-                    p.price?.regular_price && p.price?.special_price
-                      ? ((p.price.regular_price - p.price.special_price) / p.price.regular_price) * 100
-                      : 0;
-
-                  const fakeDate = typeof p?.price?.fake_product_stock == "string" ? JSON.parse(p?.price?.fake_product_stock) : p?.price?.fake_product_stock;
-
-                  return <SwiperSlide key={p.id} i>
-                    <div className='group min-h-[537px] product-item shadow-sm border border-[#EEEEEE] relative bg-white text-black rounded-lg p-3 flex flex-col'>
-                      <Link to={`/product/${p.slug}`} className='block img-switcher-2 relative'>
-                        {discountPercentage && <span className='absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]'>{discountPercentage.toFixed(2)}%</span>}
-                        {fakeDate?.status == '1' && <span className='absolute shadow-xl top-[5px] right-[5px] z-[10] text-[10px] bg-red-500 text-white px-[10px] py-[5px] rounded-[6px]'>متبقي {fakeDate?.left} فقط</span>}
-                        <Img id={`mainImage-${p.id}`} src={baseImage + p.medias?.[0]?.url} alt={p.title} className='base' />
-                        <Img src={baseImage + p.medias?.[1]?.url} alt={p.title} className='overlay' />
-                      </Link>
-
-                      {/* middle content that will grow to fill space */}
-                      <div className='flex-1 flex flex-col items-center justify-start text-center mt-3'>
-                        {p.categories?.[0]?.name && <span className='bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[8px] shadow-sm w-fit text-[10px] rounded-[10px] my-[6px] block'>
-                          {p.categories?.[0]?.name}
-                        </span>}
-
-                        <span
-                          className='w-full block text-[var(--black-1)] text-base my-[10px] overflow-hidden text-ellipsis whitespace-nowrap px-2'
-                          title={p.title}
-                        >
-                          title={p.title}
-                        </span>
-
-                        <div className='mt-2 w-full'>
-                          <PriceBlock salePrice={p.price.special_price} originalPrice={p.price.regular_price} />
-                        </div>
-                      </div>
-
-                      {/* button row stays at the bottom */}
-                      <div className='flex items-center justify-between gap-2 mt-[10px]'>
-                        <div onClick={() => router(`/product/${p.slug}`)} className='btn-blue flex-1 text-center py-2 rounded-md'>
-                          {btnName}
-                          <img src='/icons/buy.png' alt='' width={20} height={20} />
-                        </div>
-
-                        <button
-                          onClick={() => handleAddToCart(p, `mainImage-${p.id}`)}
-                          className='h-[40px] w-[40px] flex items-center justify-center bg-[var(--second)] hover:scale-[0.9] hover:opacity-90 duration-300 text-white p-2 rounded-md transition-all shadow-md'
-                          title='أضف إلى السلة'
-                        >
-                          <ShoppingCart size={18} />
-                        </button>
-                      </div>
-                    </div>
+                {products?.map(p => (
+                  <SwiperSlide key={p.id}>
+                    <RelatedProductCard product={p} btnName={btnName} baseImage={baseImage} />
                   </SwiperSlide>
+                ))}
 
-                })}
                 <div className='swiper-pagination !mt-6' />
               </Swiper>
 
@@ -171,3 +109,125 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
     </div>
   );
 }
+
+
+function RelatedProductCard({ product, btnName = "شراء الان", baseImage }) {
+  const { handleAddToCart } = useAddToCart();
+  const [isHovered, setIsHovered] = useState(false);
+  const uniqueRef = useRef(Math.random().toString(36).substring(2, 9));
+  const router = useNavigate();
+
+  const discountPercentage =
+    product?.price?.regular_price && product?.price?.special_price
+      ? ((product?.price.regular_price - product?.price.special_price) / product?.price.regular_price) * 100
+      : 0;
+
+  const fakeDate =
+    typeof product?.price?.fake_product_stock === "string"
+      ? JSON.parse(product?.price?.fake_product_stock)
+      : product?.price?.fake_product_stock;
+
+  const getImageId = () => {
+    const hasImages = product?.medias?.length > 0;
+    return getProductImageId({ hasImages, productMainImage: product?.medias?.[1]?.url, productId: product?.id, isHovered, uniqueValue: uniqueRef.current })
+  };
+
+  return (
+    <div
+      className="min-h-[537px] group product-item shadow-sm border border-[#EEEEEE] relative bg-white text-black rounded-lg p-3 flex flex-col"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Link to={`/product/${product?.slug}`} className="block img-switcher-2 relative">
+        {discountPercentage && discountPercentage?.toFixed(0) > 0 && (
+          <span className="absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]">
+            {discountPercentage.toFixed(0)}%
+          </span>
+        )}
+
+        {fakeDate?.status === "1" && (
+          <span className="absolute shadow-xl top-[5px] right-[5px] z-[10] text-[10px] bg-red-500 text-white px-[10px] py-[5px] rounded-[6px]">
+            متبقي {fakeDate?.left} فقط
+          </span>
+        )}
+
+        {product?.medias?.length > 0 ? (
+          <>
+            <Img
+              id={`mainImage-${product?.id}-${uniqueRef.current}`}
+              src={baseImage + product?.medias?.[0]?.url}
+              alt={product?.title}
+              className="base w-full h-full object-contain"
+            />
+            {product?.medias?.[1] && (
+              <Img
+                id={`hoverImage-${product?.id}-${uniqueRef.current}`}
+                src={baseImage + product?.medias?.[1]?.url}
+                alt={product?.title}
+                className="overlay w-full h-full object-contain"
+              />
+            )}
+          </>
+        ) : (
+          <NotFoundImage productId={product?.id} unique={uniqueRef.current} />
+        )}
+      </Link>
+
+      {/* middle content */}
+      <div className="flex-1 flex flex-col items-center justify-start text-center mt-3">
+        {product?.categories?.[0]?.name && (
+          <span className="bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[8px] shadow-sm w-fit text-[10px] rounded-[10px] my-[6px] block">
+            {product?.categories?.[0]?.name}
+          </span>
+        )}
+
+        <Link to={`/product/${product?.slug}`} >
+          <span
+            className="w-full block text-[var(--black-1)] text-base my-[10px] overflow-hidden text-ellipsis whitespace-nowrap px-2"
+            title={product?.title}
+          >
+            {product?.title}
+          </span>
+        </Link>
+        <div className="mt-2 w-full">
+          <PriceBlock salePrice={product?.price.special_price} originalPrice={product?.price.regular_price} />
+        </div>
+      </div>
+
+      {/* button row stays at the bottom */}
+      <div className="flex items-center justify-between gap-2 mt-[10px]">
+        <div
+          onClick={() => router(`/product/${product?.slug}`)}
+          className="btn-blue flex-1 text-center py-2 rounded-md cursor-pointer"
+        >
+          {btnName}
+          <img src="/icons/buy.png" alt="" width={20} height={20} />
+        </div>
+
+        <button
+          onClick={() => {
+            const imageId = getImageId();
+            handleAddToCart(product, imageId);
+          }}
+          className="h-[40px] w-[40px] flex items-center justify-center bg-[var(--second)] hover:scale-[0.9] hover:opacity-90 duration-300 text-white p-2 rounded-md transition-all shadow-md"
+          title="أضف إلى السلة"
+        >
+          <ShoppingCart size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const SkeletonCard = () => (
+  <div className=' animate-pulse flex-1 group shadow-sm border border-[#EEEEEE] bg-white rounded-lg p-3'>
+    <div className='bg-gray-200 h-[230px] rounded mb-4' />
+    <div className='h-3 bg-gray-200 rounded w-1/3 mx-auto mb-2' />
+    <div className='h-4 bg-gray-200 rounded w-1/2 mx-auto mb-4' />
+    <div className='flex justify-center gap-2 mb-4'>
+      <div className='h-4 bg-gray-200 rounded w-1/4' />
+      <div className='h-4 bg-gray-200 rounded w-1/6' />
+    </div>
+    <div className='h-8 bg-gray-200 rounded w-full' />
+  </div>
+);

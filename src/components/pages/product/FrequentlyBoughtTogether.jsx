@@ -5,6 +5,7 @@ import PriceCurrency from "../../atoms/PriceCurrency";
 import { Link } from "react-router-dom";
 import Img from "../../atoms/Image";
 import { baseImage } from "../../../config/Api";
+import { NotFoundImage } from "../../atoms/NotFoundImage";
 
 export const FrequentlyBoughtTogether = ({
   frequently_bought_products,
@@ -71,14 +72,19 @@ export const FrequentlyBoughtTogether = ({
     </div>
   ) : null;
 
+
 function ProductCard({ product, className = "" }) {
   const special = Number(product?.price?.special_price || 0);
   const regular = Number(product?.price?.regular_price || 0);
   const saving = regular > special ? regular - special : 0;
 
+  const discountPercentage =
+    product?.price?.regular_price && product?.price?.special_price
+      ? ((product.price.regular_price - product.price.special_price) / product.price.regular_price) * 100
+      : 0;
+
   return (
-    <Link
-      to={`/product/${product.slug}`}
+    <div
       aria-label={product.title}
       className={
         [
@@ -95,30 +101,34 @@ function ProductCard({ product, className = "" }) {
     >
       {/* image + discount badge */}
       <div className="relative w-full aspect-square rounded-md overflow-hidden bg-gray-100">
-        {product.medias?.[0] ? (
-          <Img
-            src={baseImage + product.medias[0].url}
-            alt={product.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
-            صورة غير متاحة
-          </div>
-        )}
+        <Link
+          to={`/product/${product.slug}`}
+        >
+          {product.medias?.[0] ? (
+            <Img
+              src={baseImage + product.medias[0].url}
+              alt={product.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <NotFoundImage productId={product?.id} unique={Math.random()} />
+          )}
 
-        {saving > 0 && (
-          <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-            خصم <span className="font-bold">{Math.round((saving / regular) * 100) || 0}%</span>
-          </div>
-        )}
+          {discountPercentage && discountPercentage.toFixed(0) > 0 && (
+            <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
+              خصم <span className="font-bold">{discountPercentage.toFixed(0)}%</span>
+            </div>
+          )}
+        </Link>
       </div>
 
 
       {/* title */}
-      <h4 className="w-full text-sm sm:text-base font-semibold text-[#3B2D35] leading-tight line-clamp-2">
-        {product.title}
-      </h4>
+      <Link to={`/product/${product.slug}`}>
+        <h4 className="w-full text-sm sm:text-base font-semibold text-[#3B2D35] leading-tight line-clamp-2">
+          {product.title}
+        </h4>
+      </Link>
 
       {/* price block */}
       <div className="flex items-end gap-3 justify-center flex-wrap">
@@ -132,13 +142,6 @@ function ProductCard({ product, className = "" }) {
             </span>
           )}
         </div>
-
-        {/* If you want a savings chip, uncomment: */}
-        {/* {saving > 0 && (
-            <span className="text-xs bg-[var(--second)] text-white px-2 py-1 rounded-full">
-              وفر <PriceCurrency currency="ج.م" price={saving} />
-            </span>
-          )} */}
       </div>
 
       {/* reviews */}
@@ -158,12 +161,12 @@ function ProductCard({ product, className = "" }) {
       {/* small CTA */}
       <div className="w-full mt-auto">
         <div className="mt-1 flex items-center justify-center">
-          <div className="text-xs sm:text-sm px-4 py-2 rounded-md border border-[var(--border-bg)] bg-white shadow-inner transition">
+          <Link to={`/product/${product.slug}`} className="text-xs sm:text-sm px-4 py-2 rounded-md border border-[var(--border-bg)] bg-white shadow-inner transition">
             عرض المنتج
-          </div>
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

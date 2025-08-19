@@ -28,17 +28,6 @@ function App() {
   }, [toasts]);
 
 
-  const [animLoading, setAnimLoading] = useState(true);
-  if (animLoading) {
-    return (
-      <div className='flex items-center justify-center h-screen bg-white'>
-        <div className={`bg-white absolute inset-0 z-50 flex items-center justify-center`}>
-          <Lottie animationData={lottieAnimation} loop={false} onComplete={() => setAnimLoading(false)} className='w-full h-full max-w-2xl' />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AppProviders>
       <Toaster

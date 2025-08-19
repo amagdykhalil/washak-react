@@ -31,7 +31,7 @@ export default function ProductCarousel({ btnName = 'شراء الان', order, 
     spaceBetween: 10,
     loop: true,
     speed: 1000,
-    slideToClickedSlide: true,
+    slideToClickedSlide: false,
     modules: [Navigation, Autoplay, Pagination],
     navigation: {
       prevEl: '.custom-prev',

@@ -15,6 +15,7 @@ export const VariantSelector = ({
   showValidation,
   setShowValidation,
   defaultVariantCombinations = [], // e.g. [1549,1552]
+  showVariantDetails = true
 }) => {
   const [openSelectId, setOpenSelectId] = useState(null);
   const [touchedVariants, setTouchedVariants] = useState({});
@@ -144,7 +145,6 @@ export const VariantSelector = ({
     );
   };
 
-
   const TextAreaOption = ({ variant }) => {
     const currentOptions = getValues() || [];
     const currentValue = currentOptions.find(opt => opt.startsWith(`${variant.id}_`))?.split('_')[1] || '';
@@ -215,7 +215,7 @@ export const VariantSelector = ({
   };
 
   return (
-    variants?.length > 0 && (
+    variants?.length > 0 && showVariantDetails && (
       <div className='space-y-4 !mt-12 '>
         {variants.map((variant, index) => (
           <div key={variant.id} className={`${cn} bg-white  pb-4  space-y-4`}>

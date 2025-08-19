@@ -8,6 +8,7 @@ import Product from "../../pages/Product";
 import DynamicPage from "../../pages/DynamicPage";
 import NotFoundPage from "../../pages/NotFound";
 import ThankYouPage from "../../pages/thank-you-page";
+import ScrollToTop from "../../components/atoms/ScrollToTop";
 
 function ProductWithKey() {
     const { id } = useParams();
@@ -15,21 +16,21 @@ function ProductWithKey() {
 }
 
 
+
 export function AppRoutes() {
 
     return (
         <BrowserRouter>
+            <ScrollToTop />
             <Routes>
                 <Route element={<AppLayout />}>
                     <Route path="/" index element={<Home />} />
                     <Route path="/contact-us" element={<ContactUsPage />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/thank-you-page" element={<ThankYouPage />} />
-                    <Route path="/category" element={<Products />} />
                     <Route path="/pages/:page" element={<DynamicPage />} />
-                    <Route path="/category/:id" element={<Products />} />
-                    <Route path="/products" element={<Products />} />
                     <Route path="/product/:id" element={<ProductWithKey />} />
+                    <Route path="/products" element={<Products />} />
                 </Route>
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>

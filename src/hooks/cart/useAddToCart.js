@@ -9,12 +9,27 @@ export const useAddToCart = () => {
     
     const mainImage = document.getElementById(imageId);
     const cartIcon = document.getElementById("cart-icon");
-    if (!mainImage || !cartIcon) return;
+    if (!cartIcon) return;
 
+
+    if (!mainImage) {
+      // fallback: no image found, just shake and add to cart
+      cartIcon.classList.add("animate-shake");
+      setTimeout(() => cartIcon.classList.remove("animate-shake"), 500);
+
+      addItem({
+        id: product.id,
+        quantity: 1,
+        selectedOptions: product.selectedOptions || [],
+      });
+      return;
+    }
+    
     // 1) clone and style
     const rectImg = mainImage.getBoundingClientRect();
     const rectCart = cartIcon.getBoundingClientRect();
     const clone = mainImage.cloneNode(true);
+
     clone.classList.add("clone-image");
     Object.assign(clone.style, {
       position: "fixed",

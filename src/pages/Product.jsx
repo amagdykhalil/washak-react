@@ -16,6 +16,7 @@ import { CheckoutForm } from '../components/pages/product/CheckoutForm';
 import { BuyNowSection } from '../components/pages/product/BuyNowSection';
 import { FrequentlyBoughtTogether } from '../components/pages/product/FrequentlyBoughtTogether';
 import { useProduct } from '../hooks/Product/useProduct';
+import ErrorDisplay from '../components/atoms/ErrorDisplay';
 
 export default function Product() {
   const { breadcrumbRoutes,
@@ -24,7 +25,6 @@ export default function Product() {
     product,
     loading,
     loadingLiveVariantPrice,
-    error,
     loadingRelatedProducts,
     relatedProducts,
     productOptions,
@@ -46,8 +46,13 @@ export default function Product() {
     handleBuyNow,
     quantity,
     defaultVariantCombination,
-    product_style_settings } = useProduct();
+    product_style_settings,
+    productError,
+    checkoutSettingsError,
+    relatedProductsError
+  } = useProduct();
 
+  const showCheckoutForm = !checkoutSettingsError && isQuickCheckout;
 
   if (loading) {
     return (
@@ -78,7 +83,7 @@ export default function Product() {
     );
   }
 
-  if (error) {
+  if (productError) {
     navigate('/not-found');
     return null;
   }
@@ -138,14 +143,22 @@ export default function Product() {
             defaultCvariantCombinations={defaultVariantCombination}
           />
           <StockInfo stock={product?.stock} options={productOptions} />
-          {isQuickCheckout ? <CheckoutForm checkoutFields={checkoutFields} register={register} errors={errors} className='!mt-8' /> : null}
+          {showCheckoutForm ?
+            <CheckoutForm checkoutFields={checkoutFields} register={register} errors={errors} className='!mt-8' />
+            : checkoutSettingsError ? (
+              // show a small section-level error with retry
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
+                <div className="mb-2 font-medium">تعذّر تحميل نموذج الشراء</div>
+                <div className="text-[#555] mb-3">لا يمكن تحميل حقول الطلب الآن — سيتم إضافة المنتج للسلة بدلاً من الشراء السريع.</div>
+              </div>
+            ) : null}
           <BuyNowSection showValidation={showValidation} isBuyNowLoading={isBuyNowLoading} handleBuyNow={handleBuyNow} getValues={getValues} setValue={setValue} isSticky={productOptions?.product_footer_buy_sticky === '1'} buttonText={productOptions?.buy_now_button_text} />
         </div>
       </div>
 
       <FrequentlyBoughtTogether frequently_bought_products={frequently_bought_products} product={product} frequentlyBoughtTotalPrice={frequentlyBoughtTotalPrice} isBuyNowLoading={isBuyNowLoading} errors={errors} checkoutFields={checkoutFields} getValues={getValues} handleBuyNow={handleBuyNow} />
 
-      {product_style_settings?.related_product_button_enable_custom === '1' ?
+      {!relatedProductsError && product_style_settings?.related_product_button_enable_custom === '1' ?
         <ProductCarouselRelated title={product_style_settings?.related_prod_name_custom || 'منتجات ذات صلة'} subTitle={'تصفّح منتجات قد تعجبك أيضًا بناءً على هذا المنتج'} cn='max-sm:!px-[10px] !mt-6' bg='sm:!px-[20px] py-[40px] bg-white rounded-md border border-[var(--border-bg)]' products={relatedProducts?.data} loading={loadingRelatedProducts} arrowTop={true} />
         : null}
 
@@ -155,11 +168,18 @@ export default function Product() {
   );
 }
 
+/* ======================
+   Product Title
+====================== */
 export const ProductTitle = ({ title }) => (
   <h2 className='text-2xl max-md:text-xl font-bold text-[#3B2D35]' data-aos='fade-up'>
     {title}
   </h2>
 );
+
+/* ======================
+   Product Categories
+====================== */
 
 export const Categories = ({ categories }) =>
   categories?.length > 0 && (
@@ -172,6 +192,9 @@ export const Categories = ({ categories }) =>
     </div>
   );
 
+/* ======================
+   Price Section
+====================== */
 export const PriceDisplay = ({ price }) => (
   <div className='flex items-center gap-2' data-aos='fade-up' data-aos-delay='200'>
     <span className='text-[#123770] font-bold text-lg'>
@@ -189,6 +212,10 @@ export const PriceDisplay = ({ price }) => (
     )}
   </div>
 );
+
+/* ======================
+   Variant Collection Price
+====================== */
 
 export const LiveVariantPrice = ({ loading, price, comparePrice, quantity = 1 }) => {
   if (loading) {
@@ -242,13 +269,19 @@ export const LiveVariantPrice = ({ loading, price, comparePrice, quantity = 1 })
   );
 };
 
-
+/* ======================
+   Product Header
+====================== */
 export const ProductHeader = ({ isEnabled, text }) => (
   isEnabled ? <div
     className="text-green-600 text-sm font-medium my-2"
     dangerouslySetInnerHTML={{ __html: text }}
   /> : null
 );
+
+/* ======================
+   Hurry Up Alert
+====================== */
 
 export const HurryUpAlert = ({ text }) =>
   text && (
@@ -258,6 +291,9 @@ export const HurryUpAlert = ({ text }) =>
     </div>
   );
 
+/* ======================
+ Product Reviews
+====================== */
 export const Reviews = ({ reviewEnable, noOfReviews }) =>
   reviewEnable != 0 && (
     <div className='flex items-center gap-[10px] text-sm text-[#666666]' data-aos='fade-up' data-aos-delay='500'>
@@ -272,6 +308,10 @@ export const Reviews = ({ reviewEnable, noOfReviews }) =>
     </div>
   );
 
+
+/* ======================
+ Product Description Controller
+====================== */
 export const Description = ({
   content,
   shortDescription,
@@ -280,51 +320,63 @@ export const Description = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
 
-  // If nothing exists or both are disabled → show nothing
   const hasShort = Boolean(shortDescription && isShortEnabled);
   const hasFull = Boolean(content && isDescriptionEnabled);
 
+  // If nothing exists → render nothing
   if (!hasShort && !hasFull) return null;
 
-  return (
-    <div data-aos="fade-up" data-aos-delay="600">
-      {/* Show short description if enabled */}
-      {hasShort && (
-        <div
-          className="text-[#959FBC] text-base leading-relaxed mb-2"
-          dangerouslySetInnerHTML={{ __html: shortDescription }}
-        />
-      )}
-
-      {/* If both are enabled → toggle full content */}
-      {hasShort && hasFull ? (
-        <>
-          {expanded && (
-            <div
-              className="text-[#959FBC] text-base leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
-          )}
-          <button
-            type="button"
-            onClick={() => setExpanded((prev) => !prev)}
-            className="text-blue-600 hover:underline focus:outline-none mt-1"
-          >
-            {expanded ? "عرض أقل" : "عرض المزيد"}
-          </button>
-        </>
-      ) : (
-        // If only full content is enabled → show it directly
-        !hasShort &&
-        hasFull && (
+  // Case 1: Both short + full exist
+  if (hasShort && hasFull) {
+    return (
+      <div data-aos="fade-up" data-aos-delay="600">
+        {!expanded ? (
+          <div
+            className="text-[#959FBC] text-base leading-relaxed mb-2"
+            dangerouslySetInnerHTML={{ __html: shortDescription }}
+          />
+        ) : (
           <div
             className="text-[#959FBC] text-base leading-relaxed"
             dangerouslySetInnerHTML={{ __html: content }}
           />
-        )
-      )}
-    </div>
-  );
-};
+        )}
 
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="text-blue-600 hover:underline focus:outline-none mt-1"
+        >
+          {expanded ? "عرض أقل" : "عرض المزيد"}
+        </button>
+      </div>
+    );
+  }
+
+  // Case 2: Only short exists
+  if (hasShort) {
+    return (
+      <div
+        data-aos="fade-up"
+        data-aos-delay="600"
+        className="text-[#959FBC] text-base leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: shortDescription }}
+      />
+    );
+  }
+
+  // Case 3: Only full exists
+  if (hasFull) {
+    return (
+      <div
+        data-aos="fade-up"
+        data-aos-delay="600"
+        className="text-[#959FBC] text-base leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
+  }
+
+  return null;
+};
 

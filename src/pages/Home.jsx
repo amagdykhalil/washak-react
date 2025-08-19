@@ -14,11 +14,32 @@ import SkeletonCard from '../components/skeleton/SkeletonCard.jsx';
 import ProductCard from '../components/pages/product/ProductCard.jsx';
 import { getFullPath } from '../helper/getFullPath.js';
 import { useStoreHomeSections } from '../hooks/useStoreHomeSections.js';
+import { HomeSkeleton } from '../components/skeleton/HomeSkeleton.jsx';
+import ErrorDisplay from '../components/atoms/ErrorDisplay.jsx';
+
 
 export default function Home() {
-  const { loading, data } = useStoreHomeSections();
+  const { loading, data, error } = useStoreHomeSections();
 
   const sortedSections = data?.data?.sections?.sort((a, b) => a.sort_order - b.sort_order) || [];
+
+  // Show general skeleton when main data is loading
+  if (loading) {
+    return <HomeSkeleton />;
+  }
+
+  // Show error when there's an error
+  if (error) {
+    return (
+      <ErrorDisplay
+        error={error}
+        onRetry={() => window.location.reload()}
+        title="خطأ في تحميل الصفحة الرئيسية"
+        message="عذراً، حدث خطأ أثناء تحميل محتوى الصفحة الرئيسية. يرجى المحاولة مرة أخرى."
+      />
+    );
+  }
+
 
   return (
     <div className="pt-[30px] max-sm:!pt-[10px] flex flex-col min-h-screen">
@@ -83,6 +104,7 @@ export default function Home() {
 
 }
 
+// MainSlider Wrapper
 const SectionWrapper = ({
   order,
   children,
@@ -101,7 +123,6 @@ const SectionWrapper = ({
   );
 };
 
-
 // Banner Slider Component
 function BannerSlider({ data, order, loading = false }) {
   const SkeletonBanner = () => <div className='w-full max-md:!h-[230px] !h-[400px] skeleton' />;
@@ -118,7 +139,7 @@ function BannerSlider({ data, order, loading = false }) {
             disableOnInteraction: false,
           }}
           effect='fade'
-          speed={1000}
+          speed={process.env.REACT_APP_Banner_SWIPER_SPEED || 4000}
           pagination={{ clickable: true }}
           modules={[Autoplay, Pagination, EffectFade]}
           className='w-full h-[400px] max-md:h-[240px]'>
@@ -148,7 +169,7 @@ function BannerSection({ data, order, loading = false }) {
             delay: 4000,
             disableOnInteraction: false,
           }}
-          speed={1000}
+          speed={process.env.REACT_APP_Banner_SWIPER_SPEED || 4000}
           slidesPerView={1}
           pagination={{ clickable: true }}
           modules={[Autoplay, Pagination]}
@@ -159,8 +180,9 @@ function BannerSection({ data, order, loading = false }) {
             </SwiperSlide>
           ))}
         </Swiper>
-      ) : null}
-    </div>
+      ) : null
+      }
+    </div >
   );
 }
 
@@ -195,9 +217,9 @@ function ProductSection({ sectionData, loading = false }) {
   const sliderConfig = useMemo(() => ({
     spaceBetween: 10,
     loop: true,
-    speed: 1000,
+    speed: process.env.REACT_APP_HOME_SWIPER_SPEED || 4000,
+    slideToClickedSlide: false,
     slidesPerView,
-    slideToClickedSlide: true,
     modules: [Navigation, Autoplay, Pagination],
     navigation: {
       prevEl: '.custom-prev',

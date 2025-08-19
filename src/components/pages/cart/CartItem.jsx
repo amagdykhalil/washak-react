@@ -88,42 +88,41 @@ export const CartItem = ({
                             </button>
 
                             <AnimatePresence>
-                                {showVariantDetails && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <VariantSelector
-                                            key={item.id}
-                                            cn="!bg-transparent pb-0"
-                                            innerCn="!grid-cols-[auto,1fr]"
-                                            labelCn="min-w-[70px] w-full"
-                                            variants={product.product_variants}
-                                            isVariantSelected={(variant) => {
-                                                const selectedOptions = item.selectedOptions || [];
-                                                return selectedOptions.some(opt => opt.startsWith(`${variant.id}_`));
-                                            }}
-                                            setNewOption={(variantId, optionId) => {
-                                                handleVariantSelection(product.id, variantId, optionId);
-                                            }}
-                                            getValues={() => {
-                                                return item.selectedOptions || [];
-                                            }}
-                                            showValidation={false}
-                                            setShowValidation={() => { }}
-                                            defaultCvariantCombinations={
-                                                product.product_default_variant_combination
-                                                    .join(",") // "1549,1552"
-                                                    .split(",") // ["1549","1552"]
-                                                    .map(v => Number(v.trim())) // [1549, 1552]
-                                                    .filter(n => !isNaN(n))
-                                            }
-                                            optionsKey={`options_${product?.id}`}
-                                        />
-                                    </motion.div>
-                                )}
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <VariantSelector
+                                        key={item.id}
+                                        cn="!bg-transparent pb-0"
+                                        innerCn="!grid-cols-[auto,1fr]"
+                                        labelCn="min-w-[70px] w-full"
+                                        variants={product.product_variants}
+                                        isVariantSelected={(variant) => {
+                                            const selectedOptions = item.selectedOptions || [];
+                                            return selectedOptions.some(opt => opt.startsWith(`${variant.id}_`));
+                                        }}
+                                        setNewOption={(variantId, optionId) => {
+                                            handleVariantSelection(product.id, variantId, optionId);
+                                        }}
+                                        getValues={() => {
+                                            return item.selectedOptions || [];
+                                        }}
+                                        showValidation={false}
+                                        setShowValidation={() => { }}
+                                        defaultCvariantCombinations={
+                                            product.product_default_variant_combination
+                                                .join(",") // "1549,1552"
+                                                .split(",") // ["1549","1552"]
+                                                .map(v => Number(v.trim())) // [1549, 1552]
+                                                .filter(n => !isNaN(n))
+                                        }
+                                        optionsKey={`options_${product?.id}`}
+                                        showVariantDetails={showVariantDetails}
+                                    />
+                                </motion.div>
                             </AnimatePresence>
                         </div>
                     )}

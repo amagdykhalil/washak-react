@@ -7,6 +7,7 @@ import { useCheckoutSettings } from "../useCheckoutSettings";
 import useProductsByIds from "./useProductsByIds";
 import useVariantQueries from "./useVariantQueries";
 import { useForm } from "react-hook-form";
+import { Notification } from "../../config/Notification";
 
 export const useCart = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export const useCart = () => {
       getValues
     } = useForm();
     // use the hook
-    const { data: products, isLoading: loading, refetch } = useProductsByIds(productIdsKey);
+    const { data: products, isLoading:  productsLoading, refetch, error: productsError } = useProductsByIds(productIdsKey);
     // force refetch when ids change
     useEffect(() => {
       console.log(productIdsKey)
@@ -178,7 +179,7 @@ export const useCart = () => {
     // basic validation
     if (!skipVariantValidation && !validateVariants()) {
       setSubmitError('الرجاء اختيار جميع الخيارات المطلوبة للمنتجات');
-      throw new Error('variants_validation_failed');
+      return;
     }
 
     // manually collect all form values
@@ -251,8 +252,8 @@ export const useCart = () => {
     } catch (err) {
       console.error('Checkout error', err);
       const errorMessage = err?.response?.data?.message || err?.response?.data?.error || 'حدث خطأ أثناء إتمام الطلب. الرجاء المحاولة مرة أخرى';
+      Notification(errorMessage)
       setSubmitError(errorMessage);
-      throw err;
     } finally {
       setIsBuyNowLoading(false);
     }
@@ -265,7 +266,7 @@ export const useCart = () => {
     // data
     cartItems: contextCartItems,
     products,
-    loading,
+    productsLoading,
     checkoutLoading,
     loadingRelatedProducts,
     loadingVariantPrices,
@@ -276,6 +277,7 @@ export const useCart = () => {
     isBuyNowLoading,
     checkoutFields,
     errors,
+    productsError,
 
     // actions
     removeItem,

@@ -16,6 +16,7 @@ import { ShoppingBag } from 'lucide-react';
 import Button from '../components/atoms/Button';
 import { useForm } from 'react-hook-form';
 import { CheckoutForm } from '../components/pages/product/CheckoutForm';
+import ErrorDisplay from '../components/atoms/ErrorDisplay';
 
 
 export default function Cart() {
@@ -23,7 +24,7 @@ export default function Cart() {
     // data
     cartItems,
     products,
-    loading,
+    productsLoading,
     checkoutLoading,
     loadingRelatedProducts,
     loadingVariantPrices,
@@ -34,6 +35,7 @@ export default function Cart() {
     checkoutFields,
     isBuyNowLoading,
     errors,
+    productsError,
 
     // actions
     removeItem,
@@ -43,8 +45,20 @@ export default function Cart() {
     increaseQuantity,
     decreaseQuantity
   } = useCart();
+
   const { subtotal, discount, shipping, tax, total, oldSubtotal } = totals;
   const breadcrumbRoutes = [{ label: 'الرئيسية', href: '/' }, { label: 'عربة التسوق' }];
+
+  if (productsError) {
+    return (
+      <ErrorDisplay
+        error={productsError}
+        onRetry={() => window.location.reload()}
+        title="خطأ في تحميل عربة التسوق"
+        message="عذراً، حدث خطأ أثناء تحميل المنتجات في عربة التسوق. يرجى المحاولة مرة أخرى."
+      />
+    );
+  }
 
 
   return (
@@ -55,7 +69,7 @@ export default function Cart() {
         <div className={`${cartItems.length === 0 && 'col-span-2'} bg-white p-4 rounded-md border border-[var(--border-bg)]`}>
           <Title cn='!mb-[30px]' title1='بيانات' title2='المنتجات' />
 
-          {loading ? (
+          {productsLoading ? (
             <div className='space-y-4'>
               {[1, 2, 3].map(i => (
                 <div key={i} className='flex gap-4 p-4 rounded-lg border border-[var(--border-bg)] bg-[#fafafa] animate-pulse'>
@@ -88,7 +102,7 @@ export default function Cart() {
               })}
             </div>
           ) : (
-            <EmptyState href='/products' name_href='تصفح المنتجات' type_animation='box' message='🛒 سلتك فارغة حاليًا' subtext='ابدأ بالتسوق الآن وأضف منتجاتك المفضلة!' />
+            <EmptyState href='/products' name_href='تصفح المنتجات' type_animation='box' message='🛒 سلتك فارغة حاليًا' subtext='ابدأ بالتسوق الآن وأضف منتجاتك المفضلة!' loop={false} />
           )}
         </div>
 

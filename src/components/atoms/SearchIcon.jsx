@@ -1,36 +1,31 @@
-import { Search, X } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
-import { baseImage, useApiGet } from '../../config/Api';
+import { X } from 'lucide-react';
+import { useState, useRef } from 'react';
 import Img from './Image';
 import { Link } from 'react-router-dom';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useOutsideClick } from '../../hooks/useOutsideClick';
+import { useSearchProducts } from '../../hooks/Product/useSearchProducts';
+import { baseImage } from '../../config/Api';
 
 export default function SearchIcon() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const searchRef = useRef(null);
-  const debouncedQuery = useDebounce(query, 500); // Debounce the search query
+  const debouncedQuery = useDebounce(query, 500);
 
-  // Fetch search results only when there's a debounced query
-  const { data, loading } = useApiGet(debouncedQuery ? `/search-store-products?search=${encodeURIComponent(debouncedQuery)}` : null);
+  // Use the new search hook
+  const { data, loading } = useSearchProducts(debouncedQuery);
 
   const products = data?.data?.data || [];
 
   const handleClick = () => setOpen(prev => !prev);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = event => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  // Use the custom useOutsideClick hook
+  useOutsideClick(searchRef, () => {
+    if (open) {
+      setOpen(false);
+    }
+  });
 
   // Close dropdown when an item is clicked
   const handleItemClick = () => {

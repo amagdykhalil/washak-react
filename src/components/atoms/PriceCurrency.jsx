@@ -4,7 +4,8 @@ import { useAppContext } from '../../contexts/AppContext';
 
 
 export default function PriceCurrency({ cn = '', price }) {
-  const { storeOptions: { currency: { value } } } = useAppContext()
+  const { storeOptions } = useAppContext();
+  const currencyValue = storeOptions?.currency?.value;
 
   if (price == null) return null;
 
@@ -12,13 +13,13 @@ export default function PriceCurrency({ cn = '', price }) {
 
   return (
     <div className={`flex items-center text-nowrap ${cn}`}>
-      {value?.currency_position === 'left' ? (
+      {currencyValue?.currency_position === 'left' ? (
         <>
-          {value?.currency_icon} {formattedPrice}
+          {currencyValue?.currency_icon} {formattedPrice}
         </>
       ) : (
         <>
-          {formattedPrice} {value?.currency_icon}
+          {formattedPrice} {currencyValue?.currency_icon}
         </>
       )}
     </div>
@@ -27,12 +28,8 @@ export default function PriceCurrency({ cn = '', price }) {
 
 
 export function PriceBlock({ ar = true, salePrice, originalPrice, className = '', size = 'md' }) {
-  const {
-    storeOptions: {
-      currency: { value },
-    },
-  } = useAppContext();
-
+  const { storeOptions } = useAppContext();
+  const currencyValue = storeOptions?.currency?.value;
 
   const getFontSize = () => {
     switch (size) {
@@ -57,17 +54,17 @@ export function PriceBlock({ ar = true, salePrice, originalPrice, className = ''
   return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
       <span className={`text-[var(--second)] font-medium ${fontSize.current}`}>
-        {value?.currency_position === 'left'
-          ? `${ar ? value?.currency_icon : value?.currency_name} ${extractNumber(salePrice)}`
-          : `${extractNumber(salePrice)} ${ar ? value?.currency_icon : value?.currency_name}`}
+        {currencyValue?.currency_position === 'left'
+          ? `${ar ? currencyValue?.currency_icon : currencyValue?.currency_name} ${extractNumber(salePrice)}`
+          : `${extractNumber(salePrice)} ${ar ? currencyValue?.currency_icon : currencyValue?.currency_name}`}
       </span>
 
       {/* السعر الأصلي إذا مختلف */}
       {originalPrice !== undefined && originalPrice !== salePrice && (
         <span className={`text-[var(--black-4)] line-through ${fontSize.original}`}>
-          {value?.currency_position === 'left'
-            ? `${ar ? value?.currency_icon : value?.currency_name} ${extractNumber(originalPrice)}`
-            : `${extractNumber(originalPrice)} ${ar ? value?.currency_icon : value?.currency_name}`}
+          {currencyValue?.currency_position === 'left'
+            ? `${ar ? currencyValue?.currency_icon : currencyValue?.currency_name} ${extractNumber(originalPrice)}`
+            : `${extractNumber(originalPrice)} ${ar ? currencyValue?.currency_icon : currencyValue?.currency_name}`}
         </span>
       )}
     </div>
