@@ -8,11 +8,11 @@ import { Link } from 'react-router-dom';
 import HeadTitle from './HeadTitle';
 import Img from './Image';
 import { ShoppingCart } from 'lucide-react';
-import { addToCart } from '../../hooks/hookCart';
+import { useAddToCart } from '../../hooks/cart/useAddToCart';
 
 export default function ProductCarousel({ btnName = 'شراء الان', order, btnIcon = '/icons/buy.png', loading, bg, cn, arrowTop, products, delay = 5000 }) {
   const [count, setCount] = useState(4);
-
+  const { handleAddToCart } = useAddToCart();
   useEffect(() => {
     const updateCount = () => {
       const width = window.innerWidth;
@@ -31,7 +31,7 @@ export default function ProductCarousel({ btnName = 'شراء الان', order, 
     spaceBetween: 10,
     loop: true,
     speed: 1000,
-    slideToClickedSlide: true,
+    slideToClickedSlide: false,
     modules: [Navigation, Autoplay, Pagination],
     navigation: {
       prevEl: '.custom-prev',
@@ -91,7 +91,7 @@ export default function ProductCarousel({ btnName = 'شراء الان', order, 
                       <div className='img-switcher-2 relative'>
                         {p.discount_percentage && <span className='absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]'>خصم {p.discount_percentage}%</span>}
                         <Img src={p.images?.[0]?.cdn_url} alt={p.title} className='base' />
-                        <img id={`mainImage-${p.id}`}  src={p.images?.[1]?.cdn_url} alt={p.title} className='overlay' />
+                        <img id={`mainImage-${p.id}`} src={p.images?.[1]?.cdn_url} alt={p.title} className='overlay' />
                       </div>
 
                       <span className='bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[8px] shadow-sm w-fit text-[10px] rounded-[10px] my-[15px] block mx-auto'>{p.category}</span>
@@ -111,7 +111,7 @@ export default function ProductCarousel({ btnName = 'شراء الان', order, 
                           <img src={btnIcon} alt='' width={20} height={20} />
                         </Link>
 
-                        <button onClick={() => addToCart(p , `mainImage-${p.id}`)} className=' h-[40px] w-[40px] flex items-center justify-center  bg-[var(--second)] hover:scale-[0.9] hover:opacity-90 duration-300 text-white p-2 rounded-md transition-all shadow-md' title='أضف إلى السلة'>
+                        <button onClick={() => handleAddToCart(p, `mainImage-${p.id}`)} className=' h-[40px] w-[40px] flex items-center justify-center  bg-[var(--second)] hover:scale-[0.9] hover:opacity-90 duration-300 text-white p-2 rounded-md transition-all shadow-md' title='أضف إلى السلة'>
                           <ShoppingCart size={18} />
                         </button>
                       </div>

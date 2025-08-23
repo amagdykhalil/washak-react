@@ -7,4 +7,9 @@ module.exports = {
     extend: {},
   },
   plugins: [],
+  safelist: [
+    {
+      pattern: /group-hover\/\d+:hover:max-h-\[400px\]/,
+    },
+  ],
 }
