@@ -17,6 +17,8 @@ import { NotFoundImage } from '../components/atoms/NotFoundImage';
 import { useProductsWithCategories } from '../hooks/Product/useProducts';
 import ErrorDisplay from '../components/atoms/ErrorDisplay';
 import { getProductImageId } from '../helper/getProductImageId';
+import ProductImageSwitcher from '../components/atoms/ProductImageSwitcher';
+import { Helmet } from 'react-helmet';
 
 export default function Products() {
   const {
@@ -36,7 +38,7 @@ export default function Products() {
     setPage,
     setCategory,
   } = useProductsWithCategories();
-
+  const currentCategoryLabel = categories.find(cat => cat.slug === currentCategory)?.label;
   if (productsError || categoriesError) {
     return <ErrorDisplay
       error={productsError}
@@ -49,59 +51,68 @@ export default function Products() {
 
 
   return (
-    <div className="bg-[#f8fafb]" >
-      <div className="container max-sm:!px-[20px] py-[30px]">
-        <div className="py-6 space-y-4">
-          <div data-aos="fade-up" className="flex flex-wrap gap-3">
-            {categoriesLoading
-              ? Array(4)
-                .fill(0)
-                .map((_, index) => (
-                  <div
-                    key={`cat-skeleton-${index}`}
-                    className="h-[45px] w-24 bg-gray-200 rounded-full animate-pulse"
-                  />
-                ))
+    <>
+      <Helmet>
+        <title>
+          {currentCategoryLabel
+            ? `${currentCategoryLabel}`
+            : `كل المنتجات`}
+        </title>
+      </Helmet>
+      <div className="bg-[#f8fafb]" >
+        <div className="container max-sm:!px-[20px] py-[30px]">
+          <div className="py-6 space-y-4">
+            <div data-aos="fade-up" className="flex flex-wrap gap-3">
+              {categoriesLoading
+                ? Array(4)
+                  .fill(0)
+                  .map((_, index) => (
+                    <div
+                      key={`cat-skeleton-${index}`}
+                      className="h-[45px] w-24 bg-gray-200 rounded-full animate-pulse"
+                    />
+                  ))
 
-              : categories.map((cat) => (
-                <button
-                  key={cat.key}
-                  onClick={() => setCategory(cat.slug || "all")}
-                  className={`px-4 py-2 min-h-[45px] rounded-full text-sm font-medium transition-all duration-300 
+                : categories.map((cat) => (
+                  <button
+                    key={cat.key}
+                    onClick={() => setCategory(cat.slug || "all")}
+                    className={`px-4 py-2 min-h-[45px] rounded-full text-sm font-medium transition-all duration-300 
                       ${(cat.slug || "all") === currentCategory
-                      ? "bg-[var(--main)] text-white scale-[1.1]"
-                      : "bg-white text-[#58749A] border border-[#EEF0F7] hover:bg-[var(--main)] hover:border-transparent hover:text-white hover:scale-[1.05]"
-                    }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+                        ? "bg-[var(--main)] text-white scale-[1.1]"
+                        : "bg-white text-[#58749A] border border-[#EEF0F7] hover:bg-[var(--main)] hover:border-transparent hover:text-white hover:scale-[1.05]"
+                      }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+            </div>
+
+            <Breadcrumb cn={"!pt-[30px]"} routes={breadcrumbRoutes} />
           </div>
 
-          <Breadcrumb cn={"!pt-[30px]"} routes={breadcrumbRoutes} />
+          <div className="bg-white shadow-sm p-4 lg:p-8 rounded-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {productsLoading
+              ? Array(12)
+                .fill(0)
+                .map((_, i) => <ProductSkeleton key={i} />)
+              : filteredData.map((p, index) => (
+                <PaginatedProductCard key={p.id} index={index} product={p} />
+              ))}
+
+            {filteredData.length === 0 && !productsLoading && !productsError && <EmptyState className='mx-auto col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4' />}
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            pageCount={pageCount}
+            setCurrentPage={setPage}
+          />
+
+          <FeatureList />
         </div>
-
-        <div className="bg-white shadow-sm p-4 lg:p-8 rounded-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {productsLoading
-            ? Array(12)
-              .fill(0)
-              .map((_, i) => <ProductSkeleton key={i} />)
-            : filteredData.map((p, index) => (
-              <PaginatedProductCard key={p.id} index={index} product={p} />
-            ))}
-
-          {filteredData.length === 0 && !productsLoading && !productsError && <EmptyState className='mx-auto col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4' />}
-        </div>
-
-        <Pagination
-          currentPage={currentPage}
-          pageCount={pageCount}
-          setCurrentPage={setPage}
-        />
-
-        <FeatureList />
       </div>
-    </div>
+    </>
   );
 }
 
@@ -124,15 +135,13 @@ const PaginatedProductCard = ({ product, index }) => {
       <Link to={`/product/${product?.slug}`} className=' block img-switcher-2 relative'>
         {product?.discountLabel && <span className='absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]'>{product?.discountLabel}</span>}
         {product?.fakeStock?.status && <span className='absolute shadow-xl top-[5px] right-[5px] z-[10] text-[10px] bg-red-500 text-white px-[10px] py-[5px] rounded-[6px]'>متبقي {product?.fakeStock.left} فقط</span>}
-        {hasImages ?
-          <>
-
-            <Img id={`mainImage-${product?.id}-${uniqueRef.current}`} src={product?.image} alt={product?.title} className='base' />
-            <Img id={`hoverImage-${product?.id}-${uniqueRef.current}`} src={product?.secondImage} alt={product?.title} className='overlay' />
-          </>
-          : (
-            <NotFoundImage productId={product?.id} unique={uniqueRef.current} />
-          )}
+        <ProductImageSwitcher
+          mainImage={product?.image}
+          hoverImage={product?.secondImage}
+          title={product?.title}
+          productId={product?.id}
+          unique={uniqueRef.current}
+        />
       </Link>
       <span className='bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[5px] shadow-sm w-fit text-[10px] rounded-[10px] my-[10px] block mx-auto'>{product?.cta}</span>
       <span className='text-center w-full block text-[var(--black-1)] text-base my-[10px]'>{product?.title}</span>

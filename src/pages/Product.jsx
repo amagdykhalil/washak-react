@@ -16,7 +16,6 @@ import { CheckoutForm } from '../components/pages/product/CheckoutForm';
 import { BuyNowSection } from '../components/pages/product/BuyNowSection';
 import { FrequentlyBoughtTogether } from '../components/pages/product/FrequentlyBoughtTogether';
 import { useProduct } from '../hooks/Product/useProduct';
-import ErrorDisplay from '../components/atoms/ErrorDisplay';
 
 export default function Product() {
   const { breadcrumbRoutes,

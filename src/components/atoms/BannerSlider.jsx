@@ -3,9 +3,9 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, EffectCreative } from 'swiper/modules';
 import 'swiper/css/effect-creative'; // import fade effect CSS
-
 import 'swiper/css';
 import 'swiper/css/pagination';
+
 import Img from './Image';
 
 export default function BannerSlider({ data, order, loading }) {

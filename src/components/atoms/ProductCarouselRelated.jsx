@@ -13,6 +13,7 @@ import { ShoppingCart } from 'lucide-react';
 import { useAddToCart } from '../../hooks/cart/useAddToCart';
 import { NotFoundImage } from './NotFoundImage';
 import { getProductImageId } from '../../helper/getProductImageId';
+import ProductImageSwitcher from './ProductImageSwitcher';
 
 export default function ProductCarouselRelated({ btnName = 'شراء الان', order, btnIcon = '/icons/buy.png', loading, bg, cn, arrowTop, products, title, subTitle, delay = 5000 }) {
   const [count, setCount] = useState(4);
@@ -35,7 +36,7 @@ export default function ProductCarouselRelated({ btnName = 'شراء الان', 
   const config = {
     spaceBetween: 10,
     loop: true,
-    speed: process.env.REACT_APP_RELATED_SWIPER_SPEED || 4000,
+    speed: process.env.REACT_APP_RELATED_SWIPER_SPEED || 2000,
     slideToClickedSlide: false,
     modules: [Navigation, Autoplay, Pagination],
     navigation: {
@@ -151,26 +152,13 @@ function RelatedProductCard({ product, btnName = "شراء الان", baseImage 
           </span>
         )}
 
-        {product?.medias?.length > 0 ? (
-          <>
-            <Img
-              id={`mainImage-${product?.id}-${uniqueRef.current}`}
-              src={baseImage + product?.medias?.[0]?.url}
-              alt={product?.title}
-              className="base w-full h-full object-contain"
-            />
-            {product?.medias?.[1] && (
-              <Img
-                id={`hoverImage-${product?.id}-${uniqueRef.current}`}
-                src={baseImage + product?.medias?.[1]?.url}
-                alt={product?.title}
-                className="overlay w-full h-full object-contain"
-              />
-            )}
-          </>
-        ) : (
-          <NotFoundImage productId={product?.id} unique={uniqueRef.current} />
-        )}
+        <ProductImageSwitcher
+          mainImage={product?.medias?.[0]?.url ? baseImage + product?.medias?.[0]?.url : null}
+          hoverImage={product?.medias?.[1]?.url ? baseImage + product?.medias?.[1]?.url : null}
+          title={product?.title}
+          productId={product?.id}
+          unique={uniqueRef.current}
+        />
       </Link>
 
       {/* middle content */}

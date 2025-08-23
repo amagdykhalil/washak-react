@@ -3,9 +3,10 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-creative';
+import 'swiper/css/effect-fade';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Img from '../components/atoms/Image.jsx';
 import HeadTitle from '../components/atoms/HeadTitle.jsx';
@@ -16,11 +17,13 @@ import { getFullPath } from '../helper/getFullPath.js';
 import { useStoreHomeSections } from '../hooks/useStoreHomeSections.js';
 import { HomeSkeleton } from '../components/skeleton/HomeSkeleton.jsx';
 import ErrorDisplay from '../components/atoms/ErrorDisplay.jsx';
+import { useAppContext } from '../contexts/AppContext.js';
 
 
 export default function Home() {
   const { loading, data, error } = useStoreHomeSections();
-
+  const { storeOptions } = useAppContext();
+  const { homepage_style_status } = storeOptions ?? {};
   const sortedSections = data?.data?.sections?.sort((a, b) => a.sort_order - b.sort_order) || [];
 
   // Show general skeleton when main data is loading
@@ -63,14 +66,14 @@ export default function Home() {
           case 'Product_List':
             return (
               <SectionWrapper key={section.id} order={section.sort_order}>
-                <ProductSection sectionData={section} loading={loading} />
+                <ProductSection sectionData={section} loading={loading} buyText={homepage_style_status?.status == 1 ? homepage_style_status?.value?.home_page_buybtn_text : undefined} />
               </SectionWrapper>
             );
 
           case 'Categories':
             return (
               <SectionWrapper key={section.id} order={section.sort_order}>
-                <CategoryList order={section.sort_order} Categories={section.data} loading={loading} />
+                <CategoryList order={section.sort_order} data={section.data} loading={loading} />
               </SectionWrapper>
             );
 
@@ -126,6 +129,29 @@ const SectionWrapper = ({
 // Banner Slider Component
 function BannerSlider({ data, order, loading = false }) {
   const SkeletonBanner = () => <div className='w-full max-md:!h-[230px] !h-[400px] skeleton' />;
+  // small debug helpers to watch what's happening
+
+  const scrollType = data?.section_info?.scroll_type || "Auto";
+
+  const sliderConfig = useMemo(() => ({
+    loop: true,
+    slidesPerView: 1,
+    speed: process.env.REACT_APP_BANNER_SLIDER_SWIPER_SPEED || 1000,
+    slideToClickedSlide: false,
+    modules: [Navigation, Autoplay, Pagination, EffectFade],
+    effect: 'fade',
+    pagination: {
+      clickable: true,
+    },
+    autoplay:
+      scrollType === "Auto"
+        ? {
+          delay: process.env.REACT_APP_BANNER_SLIDEER_SWIPER_DELAY || 4000,
+          disableOnInteraction: false,
+        }
+        : false,
+  }), [scrollType]);
+
 
   return (
     <div className={`container max-sm:!px-[10px]`} style={{ order }}>
@@ -133,15 +159,7 @@ function BannerSlider({ data, order, loading = false }) {
         <SkeletonBanner />
       ) : data?.images?.length > 0 ? (
         <Swiper
-          loop={true}
-          autoplay={{
-            delay: 4000,
-            disableOnInteraction: false,
-          }}
-          effect='fade'
-          speed={process.env.REACT_APP_Banner_SWIPER_SPEED || 4000}
-          pagination={{ clickable: true }}
-          modules={[Autoplay, Pagination, EffectFade]}
+          {...sliderConfig}
           className='w-full h-[400px] max-md:h-[240px]'>
           {data?.images.map((src, i) => (
             <SwiperSlide key={i}>
@@ -158,21 +176,33 @@ function BannerSlider({ data, order, loading = false }) {
 function BannerSection({ data, order, loading = false }) {
   const SkeletonBanner = () => <div className='h-[400px] rounded-lg skeleton' />;
 
+  const scrollType = data?.section_info?.scroll_type || "Auto";
+
+  const sliderConfig = useMemo(() => ({
+    loop: true,
+    speed: process.env.REACT_APP_BANNER_SECTION_SWIPER_SPEED || 2000,
+    slidesPerView: 1,
+    slidesPerView: 1,
+    modules: [Autoplay, Pagination],
+    pagination: {
+      clickable: true,
+    },
+    autoplay:
+      scrollType === "Auto"
+        ? {
+          delay: process.env.REACT_APP_BANNER_SECTION_SWIPER_DELAY || 4000,
+          disableOnInteraction: false,
+        }
+        : false,
+  }), [scrollType]);
+
   return (
     <div className='container max-sm:!px-[10px]' style={{ order }}>
       {loading ? (
         <SkeletonBanner />
       ) : data?.images?.length > 0 ? (
         <Swiper
-          loop={true}
-          autoplay={{
-            delay: 4000,
-            disableOnInteraction: false,
-          }}
-          speed={process.env.REACT_APP_Banner_SWIPER_SPEED || 4000}
-          slidesPerView={1}
-          pagination={{ clickable: true }}
-          modules={[Autoplay, Pagination]}
+          {...sliderConfig}
           className='w-full h-[400px] rounded-lg overflow-hidden'>
           {data.images.map((banner, i) => (
             <SwiperSlide key={i}>
@@ -187,7 +217,7 @@ function BannerSection({ data, order, loading = false }) {
 }
 
 // Product Section Component (handles both Dynamic_Products and Product_List)
-function ProductSection({ sectionData, loading = false }) {
+function ProductSection({ sectionData, loading = false, buyText }) {
   const { section_info, products } = sectionData.data || {};
   const isSlider = section_info?.view_type === 'Slider';
   const scrollType = section_info?.scroll_type || "Auto";
@@ -217,7 +247,7 @@ function ProductSection({ sectionData, loading = false }) {
   const sliderConfig = useMemo(() => ({
     spaceBetween: 10,
     loop: true,
-    speed: process.env.REACT_APP_HOME_SWIPER_SPEED || 4000,
+    speed: process.env.REACT_APP_PRODUCTS_SWIPER_SPEED || 2000,
     slideToClickedSlide: false,
     slidesPerView,
     modules: [Navigation, Autoplay, Pagination],
@@ -231,10 +261,17 @@ function ProductSection({ sectionData, loading = false }) {
     autoplay:
       scrollType === "Auto"
         ? {
-          delay: 5000,
+          delay: process.env.REACT_APP_PRODUCTS_SWIPER_DELAY || 4000,
           disableOnInteraction: false,
         }
         : false,
+    breakpoints: {
+      0: { slidesPerView: 1 },     // phones
+      650: { slidesPerView: 2 },   // small tablets
+      950: { slidesPerView: 3 },   // tablets
+      1200: { slidesPerView: 4 },  // laptops
+      1400: { slidesPerView: 5 },  // desktops
+    },
   }), [slidesPerView, scrollType]);
 
 
@@ -261,7 +298,7 @@ function ProductSection({ sectionData, loading = false }) {
                   <Swiper {...sliderConfig} className='!py-[50px] md:!px-[5px]'>
                     {products.map(product => (
                       <SwiperSlide key={product.id}>
-                        <ProductCard product={product} />
+                        <ProductCard product={product} buyText={buyText} />
                       </SwiperSlide>
                     ))}
                     <div className='swiper-pagination !mt-6' />
@@ -287,7 +324,7 @@ function ProductSection({ sectionData, loading = false }) {
                   <>
                     <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 py-[50px]'>
                       {products.slice(0, visibleCount).map(product => (
-                        <ProductCard key={product.id} product={product} />
+                        <ProductCard key={product.id} product={product} buyText={buyText} />
                       ))}
                     </div>
                     {visibleCount < products.length && (
@@ -308,39 +345,113 @@ function ProductSection({ sectionData, loading = false }) {
 }
 
 // Category List Component
-const CategoryList = ({ Categories, order, loading = false }) => {
+const CategoryList = ({ data, order, loading = false }) => {
+  const scrollType = data?.section_info?.scroll_type || 'Auto';
+  const slidesCount = data?.categories?.length ?? 0;
+
+
+  // Swiper config — slidesPerView: 'auto' keeps the original fixed w-[160px] cards
+  const sliderConfig = useMemo(() => ({
+    modules: [Autoplay, Pagination],
+    spaceBetween: 16, // small gap similar to your original gap-4 / gap-6
+    speed: process.env.REACT_APP_CATEGORIES_SWIPER_SPEED || 2000,
+    breakpoints: {
+      320: { slidesPerView: "auto" },  // tiny phones
+      480: { slidesPerView: 2 },  // small phones
+      640: { slidesPerView: 3 },  // larger phones
+      768: { slidesPerView: 4 },  // tablet
+      1024: { slidesPerView: 6 },  // small desktop
+      1280: { slidesPerView: 8 },  // large desktop
+    },
+    centeredSlides: false,
+    pagination: { el: '.category-pagination', clickable: true },
+    autoplay: scrollType === 'Auto'
+      ? {
+        delay: process.env.REACT_APP_CATEGORIES_SWIPER_DELAY || 4000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+        waitForTransition: false,
+      }
+      : false,
+    observer: true,
+    observeParents: true,
+    // keep default behavior for swipe/drag so visual style is unchanged
+  }), [scrollType]);
+
+  // helper to decide if center is needed
+  const checkCenter = useCallback(() => {
+    const wrapper = document.querySelector(".categories-section > .swiper-wrapper");
+    if (!wrapper) return;
+
+    const width = window.innerWidth;
+    let perView = 1;
+
+    Object.entries(sliderConfig.breakpoints).forEach(([bp, val]) => {
+      if (width >= +bp) {
+        perView = val.slidesPerView === "auto" ? slidesCount : val.slidesPerView;
+      }
+    });
+
+    if (slidesCount < perView) {
+      wrapper.classList.add("justify-center");
+    } else {
+      wrapper.classList.remove("justify-center");
+    }
+  }, [slidesCount, sliderConfig]);
+
+  useEffect(() => {
+    checkCenter();
+    window.addEventListener("resize", checkCenter);
+    return () => window.removeEventListener("resize", checkCenter);
+  }, [checkCenter]);
+
   return (
     <div className='container flex flex-col gap-12' style={{ order }}>
       {/* العنوان */}
-      <HeadTitle title={Categories?.section_info?.title} desc={Categories?.section_info?.sub_titile} loading={loading} />
+      <HeadTitle title={data?.section_info?.title} desc={data?.section_info?.sub_titile} loading={loading} />
 
       {/* القائمة أو الـ Skeleton */}
       {loading ? (
         <div className='flex flex-wrap justify-center gap-6'>
-          {Array(5)
-            .fill(0)
-            .map((_, i) => (
-              <div
-                key={i}
-                className='w-[160px] flex flex-col items-center gap-3'
-              >
-                <div className='overflow-hidden w-full h-[110px] shadow-inner p-2 rounded-lg border border-gray-200'>
-                  <div className='skeleton w-full h-full rounded-md' />
-                </div>
-                <div className='skeleton w-[100px] h-4 rounded-md mt-4' />
+          {Array(5).fill(0).map((_, i) => (
+            <div key={i} className='w-[160px] flex flex-col items-center gap-3'>
+              <div className='overflow-hidden w-full h-[110px] shadow-inner p-2 rounded-lg border border-gray-200'>
+                <div className='skeleton w-full h-full rounded-md' />
               </div>
-            ))}
-        </div>
-      ) : Categories?.categories?.length > 0 ? (
-        <div className='flex flex-wrap justify-center gap-4 md:gap-6 xl:gap-8'>
-          {Categories.categories.map((category, i) => (
-            <Link to={getFullPath("category/", category.slug)} key={i} className='  w-[160px] flex flex-col items-center transition-transform duration-300 hover:scale-105 group'>
-              <div className='overflow-hidden w-full h-[110px] shadow-inner p-2 rounded-lg border border-gray-200 '>
-                <Img src={category.image_url} alt={category.name} width={160} height={110} className='w-full h-full object-cover rounded-md transition-transform duration-500 group-hover:scale-110' />
-              </div>
-              <span className='mt-4 text-sm text-center text-gray-700 group-hover:text-primary transition-colors duration-300'>{category.name}</span>
-            </Link>
+              <div className='skeleton w-[100px] h-4 rounded-md mt-4' />
+            </div>
           ))}
+        </div>
+      ) : data?.categories?.length > 0 ? (
+        // Swiper preserves each item's classNames so style is unchanged
+        <div className=''>
+          <Swiper {...sliderConfig} className='py-2 items-center categories-section'  >
+            {data.categories.map((category, i) => (
+              <SwiperSlide
+                key={category?.id ?? category?.slug ?? i}
+                style={{ width: "160px" }}
+              >
+                <Link
+                  to={getFullPath("category/", category.slug)}
+                  className="w-[160px] flex flex-col items-center transition-transform duration-300 hover:scale-105 group mx-auto"
+                >
+                  <div className="overflow-hidden w-full h-[110px] shadow-inner p-2 rounded-lg border border-gray-200">
+                    <Img
+                      src={category.image_url}
+                      alt={category.name}
+                      width={160}
+                      height={110}
+                      className="w-full h-full object-cover rounded-md transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                  <span className="mt-4 text-sm text-center text-gray-700 group-hover:text-primary transition-colors duration-300">
+                    {category.name}
+                  </span>
+                </Link>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          <div className="category-pagination flex justify-center mt-3"></div>
         </div>
       ) : (
         <div className='py-12 text-center text-gray-500'>لا توجد تصنيفات متاحة حالياً</div>
@@ -351,7 +462,7 @@ const CategoryList = ({ Categories, order, loading = false }) => {
 
 // Feature List Component
 function FeatureList({ order, data, loading = false }) {
-  const renderSkeleton = () => (
+  const FeatureListSkeleton = () => (
     <div className='container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
       {[...Array(4)].map((_, idx) => (
         <div key={idx} className='flex flex-col items-center text-center p-4'>
@@ -366,7 +477,7 @@ function FeatureList({ order, data, loading = false }) {
   return (
     <div style={{ order }}>
       {loading ? (
-        renderSkeleton()
+        <FeatureListSkeleton />
       ) : data?.icons?.length > 0 ? (
         <div className='container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
           {data.icons.map((feature, idx) => (

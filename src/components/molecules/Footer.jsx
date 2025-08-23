@@ -5,9 +5,10 @@ import useJsonParser from '../../hooks/useJsonParser';
 import { useAppContext } from '../../contexts/AppContext';
 import { getFullPath } from '../../helper/getFullPath';
 import { useIsActiveLink } from '../../hooks/useIsActiveLink';
+import { useEffect, useState } from 'react';
 
 export default function Footer() {
-  const { menu, loadingMenu, menuSetting, loadingSetting } = useAppContext();
+  const { menu, loadingMenu, menuSetting, loadingSetting, storeOptions } = useAppContext();
   const settings = useJsonParser(
     menuSetting?.footer?.[0]?.settings,
     'Failed to parse footer settings:'
@@ -25,13 +26,35 @@ export default function Footer() {
     footer_alignment = 'horizontal',
     footer_social_icons = []
   } = settings;
+  const isVertical = footer_alignment !== 'horizontal';
+  const {
+    value: shopName = '',
+    status: shopNameStatus = 0
+  } = storeOptions?.shop_name || {};
+
+  const {
+    value: shopDesc = '',
+    status: shopDescStatus = 0
+  } = storeOptions?.shop_description || {};
+
+
+  const [lastIsVertical, setLastIsVertical] = useState(() => {
+    if (typeof window === "undefined") return !!isVertical;
+    const raw = localStorage.getItem("footer_isVertical");
+    return raw !== null ? JSON.parse(raw) : !!isVertical;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("footer_isVertical", JSON.stringify(!!isVertical));
+    setLastIsVertical(!!isVertical);
+  }, [isVertical]);
 
   // Show fallback footer if no settings or footer is disabled
   if (!menuSetting?.footer && !loadingSetting) {
     return <FallbackFooter />;
   }
 
-  const isVertical = footer_alignment !== 'horizontal';
   const isLogoSideEnabled = footer_logo_switch === '1' || (text_under_logo_status === 'yes' && footer_text_under_logo !== '');
 
   if (footer_enable_switch !== '1') return null;
@@ -44,50 +67,44 @@ export default function Footer() {
   return (
     <footer className="bg-[var(--main)] text-white">
       <div className="container !py-10 md:py-12">
-        {/* Main Footer Grid */}
-        <div className={`flex flex-col justify-center items-center gap-9  ${alignmentClasses}`}>
-          <FooterBrand
-            footer_logo_switch={footer_logo_switch}
-            footer_text_under_logo={footer_text_under_logo}
-            text_under_logo_status={text_under_logo_status}
-            footer_alignment={footer_alignment}
-            isLogoSideEnabled={isLogoSideEnabled}
-          />
+        {loadingSetting || loadingMenu ? <FooterSkeleton isVertical={lastIsVertical} /> :
+          <>
 
-          <div className={`${isLogoSideEnabled ? "lg:col-span-2" : "lg:col-span-3"}`}>
-            {loadingMenu ? (
-              <FooterSkeleton />
-            ) : (
-              <div
-                className={`grid gap-8 grid-cols-1 text-center lg:text-right lg:grid-cols-3 ${footer_alignment === 'vertical'
-                  ? '!grid-cols-1 !place-items-center text-center'
-                  : ''
-                  }`}
-              >
+            <div className={`flex flex-col justify-center items-center gap-9  ${alignmentClasses}`}>
+              <FooterBrand
+                footer_logo_switch={footer_logo_switch}
+                footer_text_under_logo={footer_text_under_logo}
+                text_under_logo_status={text_under_logo_status}
+                footer_alignment={footer_alignment}
+                isLogoSideEnabled={isLogoSideEnabled}
+                shopName={shopNameStatus == 1 ? shopName : ""}
+                shopDesc={shopDescStatus === 1 ? shopDesc : ''}
+              />
+
+              <div className={`${isLogoSideEnabled ? "lg:col-span-2" : "lg:col-span-3"}`}>
                 <FooterLinks menu={menu} isVertical={isVertical} />
               </div>
-            )}
-          </div>
 
-          <FooterContact
-            footer_alignment={footer_alignment}
-            footer_phone_number={footer_phone_number}
-            footer_email={footer_email}
-            footer_social_icons={footer_social_icons}
-          />
-        </div>
-
-        {/* Copyright */}
-        {!loadingSetting &&
-          footer_copyrights_switch === '1' &&
-          footer_copyright && (
-            <div className="border-t border-white/10 mt-12 pt-8 text-center">
-              <div
-                className="text-sm text-white/60"
-                dangerouslySetInnerHTML={{ __html: footer_copyright }}
+              <FooterContact
+                footer_alignment={footer_alignment}
+                footer_phone_number={footer_phone_number}
+                footer_email={footer_email}
+                footer_social_icons={footer_social_icons}
               />
             </div>
-          )}
+
+            {/* Copyright */}
+            {
+              footer_copyrights_switch === '1' &&
+              footer_copyright && (
+                <div className="border-t border-white/10 mt-12 pt-8 text-center">
+                  <div
+                    className="text-sm text-white/60"
+                    dangerouslySetInnerHTML={{ __html: footer_copyright }}
+                  />
+                </div>
+              )}
+          </>}
       </div>
     </footer>
   );
@@ -98,8 +115,11 @@ function FooterBrand({
   footer_text_under_logo,
   text_under_logo_status,
   footer_alignment,
-  isLogoSideEnabled
+  isLogoSideEnabled,
+  shopName,
+  shopDesc
 }) {
+  console.log(shopName || "Logo")
   return (
     <div
       className={`flex flex-col gap-4 sm:gap-6 ${footer_alignment === 'vertical' ? 'items-center text-center ' : 'items-center lg:items-start'} ${!isLogoSideEnabled && "hidden"} `}
@@ -108,7 +128,7 @@ function FooterBrand({
         <Link to="/" className="group">
           <img
             src="/logo-white.png"
-            alt="Logo"
+            alt={shopName || "Logo"}
             className="w-32 sm:w-40 h-auto object-contain opacity-90 hover:opacity-100 transition-opacity duration-200"
             loading="lazy"
           />
@@ -121,25 +141,55 @@ function FooterBrand({
           dangerouslySetInnerHTML={{ __html: footer_text_under_logo }}
         />
       )}
+
+      {shopDesc && (
+        <p className="text-white/70 font-light leading-relaxed max-w-md text-xs sm:text-sm md:text-base mt-2">
+          {shopDesc}
+        </p>
+      )}
     </div>
   );
 }
 
 function FooterLinks({ menu, isVertical }) {
-  return ["left", "center", "right"].map((position) => {
-    const section = menu?.footer?.[position];
 
-    if (!section || !section?.data.length) return null;
+  // filter out empty sections
+  const positions = ["right", "center", "left"];
+  const activeSections = positions
+    .map((pos) => menu?.footer?.[pos])
+    .filter((section) => section && section.data.length > 0);
 
-    return (
-      <div key={position} className={`flex flex-col gap-4 ${isVertical ? 'items-center text-center' : ''}`}>
-        <h3 className="text-base sm:text-lg font-semibold text-white tracking-wide">
-          روابط هامة
-        </h3>
-        <FooterLinksList links={section.data} position={position} isVertical={isVertical} />
+  if (!activeSections.length) return null;
+
+  return (
+    <>
+      <div
+        className={`footer-grid grid gap-8 grid-cols-1 text-center lg:text-right  ${isVertical
+          ? '!grid-cols-1 !place-items-center text-center'
+          : ''
+          }`}
+        style={{ "--cols": String(activeSections.length) }}
+      >
+        {activeSections.map((section, idx) => (
+          <div
+            key={section.position || idx}
+            className={`flex flex-col gap-4 ${isVertical ? 'items-center text-center' : ''}`}
+          >
+            <h3
+              className="text-base sm:text-lg font-semibold text-white tracking-wide"
+            >
+              {section.name || "قسم"}
+            </h3>
+            <FooterLinksList
+              links={section.data}
+              position={section.position}
+              isVertical={isVertical}
+            />
+          </div>
+        ))}
       </div>
-    );
-  });
+    </>
+  )
 }
 
 const FooterLinksList = ({ links, position, level = 0, isVertical, parentSlug = "" }) => {
@@ -264,27 +314,71 @@ function FooterContact({
   );
 }
 
-const FooterSkeleton = () => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 w-full">
-    {Array(3)
-      .fill(0)
-      .map((_, index) => (
-        <div key={index} className="flex flex-col gap-3 sm:gap-4">
-          <div className="w-24 sm:w-32 h-5 sm:h-6 bg-white/10 animate-pulse rounded-full" />
-          <div className="flex flex-col gap-2 sm:gap-3">
-            {Array(4)
-              .fill(0)
-              .map((_, i) => (
-                <div
-                  key={i}
-                  className="w-full h-3 sm:h-4 bg-white/10 animate-pulse rounded-full"
-                />
-              ))}
-          </div>
+export function FooterSkeleton({ isVertical }) {
+  return (
+    <div
+      className={`flex flex-col justify-center items-center gap-9 ${isVertical ? 'text-center' : 'lg:grid lg:grid-cols-4 grid-cols-1 lg:items-start'
+        }`}
+    >
+      {/* Logo + Text Skeleton */}
+      <div
+        className={`flex flex-col gap-4 sm:gap-6 ${isVertical ? 'items-center text-center' : 'items-center lg:items-start'
+          }`}
+      >
+        <div className="w-32 sm:w-40 h-10 bg-white/20 rounded animate-pulse" />
+        <div className="h-4 w-64 bg-white/10 rounded animate-pulse" />
+      </div>
+
+      {/* Links Skeleton */}
+      <div className={`${isVertical ? '' : 'lg:col-span-2'}`}>
+        <div
+          className={`grid gap-8 grid-cols-1 text-center lg:text-right ${isVertical ? '!grid-cols-1 !place-items-center text-center' : 'lg:grid-cols-3'
+            }`}
+        >
+          {Array.from({ length: isVertical ? 1 : 3 }).map((_, i) => (
+            <div
+              key={i}
+              className={`flex flex-col gap-4 ${isVertical ? 'items-center text-center' : 'lg:items-start'
+                }`}
+            >
+              <div className="h-4 w-32 bg-white/20 rounded animate-pulse" />
+              <ul className="flex flex-col gap-2">
+                {Array.from({ length: 4 }).map((_, j) => (
+                  <li key={j} className="h-3 w-24 bg-white/10 rounded animate-pulse" />
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-      ))}
-  </div>
-);
+      </div>
+
+      {/* Contact Skeleton */}
+      <div
+        className={`flex flex-col gap-4 sm:gap-6 ${isVertical ? 'items-center text-center' : 'items-center text-center lg:items-start lg:text-left'
+          }`}
+      >
+        <div className="h-4 w-28 bg-white/20 rounded animate-pulse" />
+        <div className="flex flex-col gap-2 sm:gap-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/10 rounded-lg animate-pulse" />
+              <div className="h-3 w-32 bg-white/10 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2 sm:gap-3 mt-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="w-8 h-8 sm:w-10 sm:h-10 bg-white/10 rounded-lg animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 // Fallback Footer Component
 function FallbackFooter() {

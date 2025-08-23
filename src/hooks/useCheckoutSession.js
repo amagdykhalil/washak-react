@@ -1,11 +1,19 @@
 // src/hooks/useCheckoutSession.ts
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAppContext } from '../contexts/AppContext'
 
 export function useCheckoutSession() {
   const navigate = useNavigate()
+  const {storeOptions} = useAppContext()
+  const {thankyou_content: {value: thankyou_content_value = '', status : thankyou_content_status = 0} } = storeOptions;
+  //thank you css and js
+  const addon = storeOptions?.addon_content;
+  const { thankyou_css, thankyou_js } = addon?.value || {};
+  const shouldInject = addon?.status === 1;
 
   // 1. Breadcrumbs never change
+  
   const breadcrumbRoutes = useMemo(
     () => [
       { label: 'الرئيسية', href: '/' },
@@ -94,5 +102,10 @@ export function useCheckoutSession() {
     cart, 
     res,
     setShowAnimation,
+    shouldInject,
+    thankyou_css, 
+    thankyou_js,
+    thankyou_content_status,
+    thankyou_content_value
   }
 }

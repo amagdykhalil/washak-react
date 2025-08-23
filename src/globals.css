@@ -285,7 +285,7 @@ html {
     transform: scale(1.2);
   }
   
-  .product-item:hover .base {
+  .product-item:hover .overlay + .base {
     opacity: 0;
     transform: scale(0.8);
   }
@@ -483,4 +483,10 @@ button:disabled,
   pointer-events: none;   /* disable all mouse/hover/click events */
   opacity: 0.5;           /* make it look faded */
   transition: opacity 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: repeat(var(--cols, 1), 1fr);
+  }
 }

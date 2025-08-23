@@ -70,16 +70,27 @@ export function useProductsWithCategories() {
     return result;
   }, [categoriesData]);
 
+  console.log(storedProducts?.data?.data)
   // products
   const products = useMemo(() => {
+    
     return (
-      storedProducts?.data?.data?.map((product) => ({
+      storedProducts?.data?.data?.map((product) => {
+        let secondImageUrl = ''
+    if(product?.preview?.media?.url){
+      const previewUrl = product?.preview?.media?.url;
+      const secondImage = product?.medias?.find(im => im?.url != previewUrl);
+      if(secondImage ){
+        secondImageUrl = secondImage?.url;
+      }
+    }
+        return {
         id: product?.id,
         image: product?.preview?.media?.url
           ? baseImage + product?.preview?.media?.url
           : null,
-        secondImage: product?.medias?.[1]?.url
-          ? baseImage + product?.medias?.[1]?.url
+        secondImage: secondImageUrl
+          ? baseImage + secondImageUrl
           : null,
         discountLabel: getDiscountLabel(product),
         cta: product?.categories?.[0]?.name || "منتج",
@@ -92,7 +103,7 @@ export function useProductsWithCategories() {
         fakeStock: product?.price?.fake_product_stock
           ? JSON.parse(product?.price.fake_product_stock)
           : null,
-      })) || []
+  }}) || []
     );
   }, [storedProducts]);
 

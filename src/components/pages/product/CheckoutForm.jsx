@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import Title from '../../atoms/Title';
 
-export const CheckoutForm = ({ checkoutFields, register, errors, className }) => {
-  console.log(checkoutFields)
+export const CheckoutForm = ({ checkoutFields, register, errors, className, title }) => {
+  console.log(title)
   return (
     <motion.form
       initial={{ opacity: 0, height: 0 }}
@@ -11,7 +11,9 @@ export const CheckoutForm = ({ checkoutFields, register, errors, className }) =>
       className={`space-y-4 !mb-8 bg-white rounded-lg overflow-hidden ${className}`}
       data-aos='fade-up'
     >
-      <Title title1='يرجى ادخال معلوماتك ' title2='لإكمال الطلب' cn='!mb-8' />
+
+      {title ? <CustomTilte rawTitle={title} />
+        : <Title title1='يرجى ادخال معلوماتك ' title2='لإكمال الطلب' cn='!mb-8' />}
       {checkoutFields.map(field => {
         if (!field.is_enable) return null;
 
@@ -36,6 +38,27 @@ export const CheckoutForm = ({ checkoutFields, register, errors, className }) =>
       })}
     </motion.form>
   );
+};
+
+
+function CustomTilte({ rawTitle }) {
+  const words = rawTitle.trim().split(/\s+/);
+
+  if (words.length === 1) {
+    return <Title title1={words[0]} title2="" cn="!mb-8" />;
+  }
+
+  if (words.length <= 3) {
+    const title2 = words.pop(); // last word
+    const title1 = words.join(" ");
+    return <Title title1={title1} title2={title2} cn="!mb-8" />;
+  }
+
+  // For longer titles, you can customize further if needed
+  const lastTwo = words.splice(-2).join(" "); // removes them from words array
+  const firstPart = words.join(" "); // remaining words
+
+  return <Title title1={firstPart} title2={lastTwo} cn="!mb-8" />;
 };
 
 const FieldLabel = ({ field }) => (

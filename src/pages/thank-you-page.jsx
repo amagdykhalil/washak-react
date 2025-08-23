@@ -7,6 +7,7 @@ import thankyouAnimation from '../lottie/Success Check.json';
 import { baseImage } from '../config/Api';
 import { useCheckoutSession } from '../hooks/useCheckoutSession';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
 
 
@@ -30,62 +31,91 @@ export default function ThankYouPage() {
     res,
     cartLength,
     setShowAnimation,
+    thankyou_content_status,
+    thankyou_content_value,
+    thankyou_css,
+    thankyou_js,
+    shouldInject
   } = useCheckoutSession()
 
   return (
-    <div className='bg-[#f8fafb]'>
-      <Breadcrumb cn='!mt-0 !pt-[30px] container' routes={breadcrumbRoutes} />
+    <>
 
-      {showAnimation && (
-        <div className='bg-white absolute inset-0 z-50 flex items-center justify-center'>
-          <Lottie
-            animationData={thankyouAnimation}
-            loop={false}
-            onComplete={() => setShowAnimation(false)}
-            className='w-full h-full max-w-md'
-          />
-        </div>
-      )}
+      <Helmet>
+        <title>شكراً لطلبك</title>
+        <meta name="description" content="تم استلام طلبك بنجاح. يمكنك مراجعة تفاصيل الطلب وملخص الفاتورة هنا." />
+        {thankyou_css && shouldInject && <style type="text/css">{thankyou_css}</style>}
+        {thankyou_js && shouldInject && <script type="text/javascript">{thankyou_js}</script>}
+      </Helmet>
 
-      {!showAnimation && (
-        <div className='container max-md:!px-[15px]'>
-          <div className='text-right text-gray-800'>
-            <SuccessMessage />
+      <div className='bg-[#f8fafb]'>
+        <Breadcrumb cn='!mt-0 !pt-[30px] container' routes={breadcrumbRoutes} />
 
-            <div className='grid md:grid-cols-3 gap-6'>
-              <div className='md:col-span-2 gap-6 flex flex-col'>
-                <ProductDetails
+        {showAnimation && (
+          <div className='bg-white absolute inset-0 z-50 flex items-center justify-center'>
+            <Lottie
+              animationData={thankyouAnimation}
+              loop={false}
+              onComplete={() => setShowAnimation(false)}
+              className='w-full h-full max-w-md'
+            />
+          </div>
+        )}
+
+        {!showAnimation && (
+          <div className='container max-md:!px-[15px]'>
+            <div className='text-right text-gray-800'>
+              {thankyou_content_status === 1 ? (
+                <div
+                  className='rounded-lg border border-[var(--border-bg)] text-center space-y-2 bg-white min-h-[30vh] flex items-center justify-center flex-col gap-[10px] mb-[20px]'
+                  data-aos='fade-up'
+                  data-aos-delay='100'
+                >
+                  {thankyou_content_value ? (
+                    <div dangerouslySetInnerHTML={{ __html: thankyou_content_value }} />
+                  ) : (
+                    <SuccessMessage />
+                  )}
+                </div>
+              ) : null}
+
+
+
+              <div className='grid md:grid-cols-3 gap-6'>
+                <div className='md:col-span-2 gap-6 flex flex-col'>
+                  <ProductDetails
+                    isCartPurchase={isCartPurchase}
+                    cart={cart}
+                    product={product}
+                    variants={variants}
+                    selectedOptions={selectedOptions}
+                    currency={currency}
+                    orderSummary={orderSummary}
+                    res={res}
+                    getOptionName={getOptionName}
+                  />
+
+                  <OrderSummary orderSummary={orderSummary} />
+                </div>
+
+                <ShippingSummary
                   isCartPurchase={isCartPurchase}
-                  cart={cart}
-                  product={product}
-                  variants={variants}
-                  selectedOptions={selectedOptions}
+                  cartLength={cartLength}
+                  totalCartQuantity={totalCartQuantity}
+                  subTotal={subTotal}
+                  tax={tax}
+                  shipping={shipping}
+                  totals={totals}
                   currency={currency}
-                  orderSummary={orderSummary}
-                  res={res}
-                  getOptionName={getOptionName}
                 />
-
-                <OrderSummary orderSummary={orderSummary} />
               </div>
-
-              <ShippingSummary
-                isCartPurchase={isCartPurchase}
-                cartLength={cartLength}
-                totalCartQuantity={totalCartQuantity}
-                subTotal={subTotal}
-                tax={tax}
-                shipping={shipping}
-                totals={totals}
-                currency={currency}
-              />
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <FeatureList />
-    </div>
+        <FeatureList />
+      </div>
+    </>
   )
 }
 
@@ -93,11 +123,7 @@ export default function ThankYouPage() {
 
 function SuccessMessage() {
   return (
-    <div
-      className='rounded-lg border border-[var(--border-bg)] text-center space-y-2 bg-white min-h-[40vh] flex items-center justify-center flex-col gap-[10px] mb-[20px]'
-      data-aos='fade-up'
-      data-aos-delay='100'
-    >
+    <>
       <h2 className='text-2xl max-md:text-xl text-[#404145] font-semibold'>
         تم إتمام طلبك <span className='text-[var(--second)]'>بنجاح !</span>
       </h2>
@@ -115,7 +141,7 @@ function SuccessMessage() {
         data-aos='fade-up'
         data-aos-delay='300'
       />
-    </div>
+    </>
   )
 }
 

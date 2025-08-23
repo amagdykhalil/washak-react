@@ -9,7 +9,7 @@ import useMenuNavigation from '../../hooks/useMenuNavigation';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 
 export default function Navbar() {
-  const { menu, loadingMenu, menuSetting, loadingSetting } = useAppContext();
+  const { menu, loadingMenu, menuSetting, storeOptions } = useAppContext();
 
   const menuItems = menu?.header?.data || [];
 
@@ -20,21 +20,27 @@ export default function Navbar() {
     settings,
     goToSubmenu,
     goBack,
+    resetMenu,
     menuOpen,
     setMenuOpen,
     history,
     count
   } = useMenuNavigation(menuItems, menuSetting);
 
-  const { header_text = '', header_enable_switch = '1', site_logo_enable = '1', search_enable = '1', cart_enable = '1', cart_icon = '', navbar_enable = '1', bar_icon = 'fa-bars' } = settings;
+  const {
+    value: shopName = '',
+    status: shopNameStatus = 0
+  } = storeOptions?.shop_name || {};
 
+  const { header_text = '', header_enable_switch = '1', site_logo_enable = '1', search_enable = '1', cart_enable = '1', cart_icon = '', navbar_enable = '1', bar_icon = 'fa-bars' } = settings;
+  const onlyDesktopLinks = site_logo_enable !== '1' && search_enable !== '1' && cart_enable !== '1' && menuItems.length > 0;
 
   if (!menu?.header && !loadingMenu) {
     return <FallbackHeader />
   }
 
   return (
-    <div className={`main-header sticky top-0 z-50  ${menuOpen ? "menu-open" : ""}`}>
+    <div className={`main-header ${header_enable_switch !== '1' && "is-scrolled"} sticky top-0 z-50  ${menuOpen ? "menu-open" : ""}`}>
       {header_enable_switch === '1' && header_text && (
         <header
           className="header-bar text-white w-full flex items-center justify-center gap-4 text-base max-md:text-xs duration-500 transition-all"
@@ -57,15 +63,16 @@ export default function Navbar() {
       {/* Main nav */}
       {navbar_enable === '1' &&
         <div
-          className="bg-white"
+          className="navbar bg-white"
           style={{ boxShadow: '0px 4px 4px 0px #CFCFCF40' }}
         >
-          <nav className="container !h-[80px] mx-auto flex items-center lg:justify-between py-4 !px-4 lg:px-0">
+          <nav className={`container !h-[80px] mx-auto flex items-center py-4 !px-4 lg:px-0 ${onlyDesktopLinks ? 'lg:justify-center' : 'lg:justify-between'
+            }`}>
             {site_logo_enable === '1' && (
               <Link to="/">
                 <img
                   src="/logo.png"
-                  alt="Logo"
+                  alt={shopNameStatus == 1 ? shopName : "Logo"}
                   width={126}
                   height={50}
                   className="logo object-contain duration-500"
@@ -125,6 +132,7 @@ export default function Navbar() {
             goToSubmenu={goToSubmenu}
             goBack={goBack}
             loading={loadingMenu}
+            resetMenu={resetMenu}
           />
 
         </div>}
@@ -157,7 +165,15 @@ function MobileMenuToggle({ bar_icon, menuOpen, setMenuOpen }) {
   );
 }
 
-function MenuList({ items = [], goToSubmenu, setMenuOpen, fullPathFactory, loading = false }) {
+function MenuList({ items = [], goToSubmenu, setMenuOpen, fullPathFactory, loading = false, resetMenu }) {
+  const handleCloseMenu = () => {
+    setMenuOpen(false);
+    setTimeout(() => {
+      resetMenu();
+    }, 100);
+  };
+
+
   if (loading) {
     // Skeleton placeholders during loading
     return (
@@ -194,7 +210,7 @@ function MenuList({ items = [], goToSubmenu, setMenuOpen, fullPathFactory, loadi
                 <Link
                   to={fullPath || '#'}
                   target={item.target || '_self'}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={handleCloseMenu}
                   className="w-full text-[var(--black-2)] font-semibold transition-colors duration-200 group-hover:text-[var(--main)]"
                 >
                   {item.text || 'Menu Item'}
@@ -232,7 +248,8 @@ function MobileMenu({
   mainPageSlug,
   goToSubmenu,
   goBack,
-  loading = false
+  loading = false,
+  resetMenu
 }) {
   const fullPathFactory = (item) => getFullPath(isMain ? item.page_slug : mainPageSlug, item.href);
 
@@ -272,6 +289,7 @@ function MobileMenu({
         setMenuOpen={setMenuOpen}
         fullPathFactory={fullPathFactory}
         loading={loading}
+        resetMenu={resetMenu}
       />
     </div>
   );

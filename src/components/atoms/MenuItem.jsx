@@ -5,11 +5,15 @@ import { useIsActiveLink } from "../../hooks/useIsActiveLink";
 import { Link } from 'react-router-dom';
 
 
-export default function MenuItem({ item, isSub = false, slug = '' }) {
+export default function MenuItem({ item, isSub = false, slug = '', closeParent }) {
     const [open, setOpen] = useState(false);
     const fullPath = getFullPath(isSub ? slug : item.page_slug, item.href)
     const isActive = useIsActiveLink(fullPath)
 
+    function handleCloseParent() {
+        setOpen(false);
+        closeParent?.();
+    }
     return (
         <li
             className="relative"
@@ -39,8 +43,10 @@ export default function MenuItem({ item, isSub = false, slug = '' }) {
                 <Link
                     to={fullPath}
                     target={item.target || "_self"}
+                    onClick={handleCloseParent}
+                    onCli
                     className={
-                        `navlink flex items-center whitespace-nowrap transition-all duration-200 ease-in-out
+                        `navlink flex items-center whitespace-nowrap transition-all duration-200 ease-in-out 
                         ${isActive ? "active" : ""}`
                     }
                 >
@@ -51,7 +57,7 @@ export default function MenuItem({ item, isSub = false, slug = '' }) {
                     {item.children?.length > 0 && (
                         <ChevronDown
                             className={`w-4 h-4 stroke-[3px] transition-all duration-200 !mt-[4px] hover:scale-110 hover:text-[var(--main)]
-                    ${isSub ? "-rotate-90" : ""}
+                    ${isSub ? "rotate-90" : ""}
                     ${open && !isSub ? "rotate-180" : ""}`}
                         />
                     )}
@@ -61,13 +67,13 @@ export default function MenuItem({ item, isSub = false, slug = '' }) {
             {
                 item.children?.length > 0 && (
                     <ul
-                        className={`absolute bg-white shadow-lg rounded-lg transition-all duration-500 ease-in-out min-w-[180px] z-50
+                        className={`absolute bg-white shadow-lg transition-all duration-500 ease-in-out min-w-[180px] z-50  
                     ${open ? "max-h-[400px] opacity-100" : "overflow-hidden max-h-0 opacity-0 "}
-                    ${isSub ? "left-full top-0 " : "right-0 -bottom-full mt-2"}
+                    ${isSub ? "right-full top-0 " : "right-0 top-full mt-2"}
                 `}
                     >
                         {item.children.map((child, idx) => (
-                            <MenuItem key={idx} item={child} isSub={true} slug={isSub ? slug : item.page_slug} />
+                            <MenuItem key={idx} item={child} isSub={true} slug={isSub ? slug : item.page_slug} closeParent={handleCloseParent} />
                         ))}
                     </ul>
 

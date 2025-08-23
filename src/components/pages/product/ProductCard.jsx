@@ -6,9 +6,10 @@ import { ShoppingCart } from "lucide-react";
 import { useAddToCart } from "../../../hooks/cart/useAddToCart";
 import { NotFoundImage } from "../../atoms/NotFoundImage";
 import { getProductImageId } from "../../../helper/getProductImageId";
+import ProductImageSwitcher from "../../atoms/ProductImageSwitcher";
 
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, buyText = 'شراء الان' }) {
     const { handleAddToCart } = useAddToCart();
     const [isHovered, setIsHovered] = useState(false);
     // ✅ stable random suffix for unique IDs
@@ -23,14 +24,13 @@ export default function ProductCard({ product }) {
     return <div className='min-h-[487.5px] group product-item shadow-sm border border-[#EEEEEE] relative bg-white text-black rounded-lg p-3 h-full flex flex-col' onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         <Link to={`/product/${product?.slug}`} className='img-switcher-2 relative  block'>
             {product?.discount_percentage && <span className='absolute shadow-xl top-[5px] left-[5px] z-[10] text-[10px] bg-[var(--second)] text-white px-[10px] py-[5px] rounded-[6px]'>خصم {product?.discount_percentage}%</span>}
-            {product?.images?.length > 0 ?
-                <>
-                    <Img id={`mainImage-${product?.id}-${uniqueRef.current}`} src={product?.images?.[0]?.cdn_url} alt={product?.title} className='base w-full h-full  object-contain' />
-                    <Img id={`hoverImage-${product?.id}-${uniqueRef.current}`} src={product?.images?.[1]?.cdn_url} alt={product?.title} className='overlay w-full h-full  object-contain' />
-                </>
-                : (
-                    <NotFoundImage productId={product?.id} unique={uniqueRef.current} />
-                )}
+            <ProductImageSwitcher
+                mainImage={product?.images?.[0]?.cdn_url}
+                hoverImage={product?.images?.[1]?.cdn_url}
+                title={product?.title}
+                productId={product?.id}
+                unique={uniqueRef.current}
+            />
         </Link>
 
         <span className='bg-[#F8F8F9] text-[#A0A9BB] px-[20px] py-[8px] shadow-sm w-fit text-[10px] rounded-[10px] my-[15px] block mx-auto'>{product?.category}</span>
@@ -43,7 +43,7 @@ export default function ProductCard({ product }) {
 
         <div className='flex items-center justify-between gap-2 mt-auto'>
             <Link to={`/product/${product?.slug}`} className='btn-blue flex-1 text-center py-2 rounded-md'>
-                شراء الان
+                {buyText}
                 <img src='/icons/buy.png' alt='' width={20} height={20} />
             </Link>
 

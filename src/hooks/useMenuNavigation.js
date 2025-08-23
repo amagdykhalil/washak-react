@@ -29,14 +29,15 @@ export default function useMenuNavigation(menuItems = [], menuSetting) {
       : menuItems[historyRef.current[0]]?.page_slug || '';
   
     const settings = useJsonParser(menuSetting?.header?.[0]?.settings, 'Failed to parse header settings:');
-
+    const { header_text = ''} = settings;
     // Handle window resize and scroll
     useEffect(() => {
       const mainHeader = document.querySelector('.main-header');
-  
+      const navbar = document.querySelector('.header-bar');
+
       const handleScroll = () => {
-        if (!mainHeader) return;
-        
+        if (!mainHeader || !navbar) return;
+
         if (window.scrollY > 0) {
           mainHeader.classList.add('is-scrolled');
         } else {
@@ -70,7 +71,7 @@ export default function useMenuNavigation(menuItems = [], menuSetting) {
         window.removeEventListener('scroll', handleScroll);
         window.removeEventListener('resize', handleResize);
       };
-    }, [menuOpen]); // Added menuOpen to dependencies
+    }, [menuOpen, header_text]); 
 
     // Go to submenu
     const goToSubmenu = (index) => {
@@ -98,6 +99,16 @@ export default function useMenuNavigation(menuItems = [], menuSetting) {
       setCurrentMenu(result);
     };
 
+    // Reset to default (MAIN MENU)
+    const resetMenu = () => {
+      historyRef.current = [];
+      setCurrentMenu({
+        items: menuItems,
+        title: "MAIN MENU",
+      });
+    };
+
+
     return {
         currentMenu,      // { items: [...], title: '...' }
         isMain,
@@ -107,6 +118,7 @@ export default function useMenuNavigation(menuItems = [], menuSetting) {
         count,
         goToSubmenu,
         goBack,
+        resetMenu,
         menuOpen, 
         setMenuOpen
       };

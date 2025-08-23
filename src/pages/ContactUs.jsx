@@ -9,6 +9,8 @@ import TextArea from '../components/atoms/TextArea';
 import Button from '../components/atoms/Button';
 import FeatureList from '../components/molecules/FeatureList';
 import { useAppContext } from '../contexts/AppContext';
+import useJsonParser from '../hooks/useJsonParser';
+import { Helmet } from 'react-helmet';
 
 /* ======================
    Validation Schema
@@ -24,7 +26,16 @@ const contactSchema = yup.object().shape({
    Main Page
 ====================== */
 export default function ContactUsPage() {
-  const { storeOptions: data, optionsLoading: loading } = useAppContext();
+  const { storeOptions: data, optionsLoading: loading, menuSetting, loadingSetting } = useAppContext();
+  const settings = useJsonParser(
+    menuSetting?.footer?.[0]?.settings,
+    'Failed to parse footer settings:'
+  );
+  const {
+    footer_phone_number = '',
+    footer_email = '',
+  } = settings;
+
   const contactData = data?.contactus_page_data;
 
   const {
@@ -98,7 +109,7 @@ export default function ContactUsPage() {
           )}
 
           <div className='space-y-6'>
-            <ContactInfo loading={loading} />
+            <ContactInfo loading={loading || loadingSetting} phone={footer_phone_number} email={footer_email} />
             <ContactMap
               loading={loading}
               showMap={showMap}
@@ -154,43 +165,49 @@ function ContactForm({ loading, register, errors, handleSubmit, onSubmit, isSubm
 /* ======================
    Contact Info Component
 ====================== */
-function ContactInfo({ loading }) {
+function ContactInfo({ loading, email, phone }) {
   return (
-    <div className='bg-gray-100/30 p-6 rounded-md shadow-lg border border-gray-200/60'>
-      {loading ? (
-        <div className='space-y-4'>
-          <div className='h-8 bg-gray-200 rounded-full w-1/3 animate-pulse'></div>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className='flex items-center gap-4'>
-              <div className='w-6 h-6 bg-gray-300 rounded-full'></div>
-              <div className='h-4 bg-gray-200 rounded-full w-3/4 animate-pulse'></div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <>
-          <h2 className='text-xl font-bold text-[#002c5f] mb-6'>معلومات التواصل</h2>
+    <>
+      <Helmet>
+        <title>إتصل بنا</title>
+      </Helmet>
+      <div className='bg-gray-100/30 p-6 rounded-md shadow-lg border border-gray-200/60'>
+        {loading ? (
           <div className='space-y-4'>
-            <div className='flex items-start gap-4'>
+            <div className='h-8 bg-gray-200 rounded-full w-1/3 animate-pulse'></div>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className='flex items-center gap-4'>
+                <div className='w-6 h-6 bg-gray-300 rounded-full'></div>
+                <div className='h-4 bg-gray-200 rounded-full w-3/4 animate-pulse'></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <h2 className='text-xl font-bold text-[#002c5f] mb-6'>معلومات التواصل</h2>
+            <div className='space-y-4'>
+              {/* <div className='flex items-start gap-4'>
               <MapPin className='text-[#ff8000] mt-1 flex-shrink-0' />
               <span className='text-gray-700'>الرياض، المملكة العربية السعودية</span>
+            </div> */}
+              <div className='flex items-center gap-4'>
+                <Phone className='text-[#ff8000] flex-shrink-0' />
+                <a href={`tel:${phone}`} className='text-gray-700 hover:text-[#002c5f] transition'>
+                  {phone}
+                </a>
+              </div>
+              <div className='flex items-center gap-4'>
+                <Mail className='text-[#ff8000] flex-shrink-0' />
+                <a href={`mailto:${email}`} className='text-gray-700 hover:text-[#002c5f] transition'>
+                  {email}
+                </a>
+              </div>
             </div>
-            <div className='flex items-center gap-4'>
-              <Phone className='text-[#ff8000] flex-shrink-0' />
-              <a href='tel:+966555555555' className='text-gray-700 hover:text-[#002c5f] transition'>
-                +966 555 555 555
-              </a>
-            </div>
-            <div className='flex items-center gap-4'>
-              <Mail className='text-[#ff8000] flex-shrink-0' />
-              <a href='mailto:info@example.com' className='text-gray-700 hover:text-[#002c5f] transition'>
-                info@example.com
-              </a>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+    </>
+
   );
 }
 
